@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+    ================================================================================
+    MYBAMBU RISK MODEL - MICRO-LOANS CASH FLOW ANALYSIS
+    Complete Documentation & Interactive Dashboard
+    ================================================================================
+
+    METHODOLOGY DOCUMENTATION
+    =========================
+    This report documents a Pure Cash Flow risk assessment model for micro-loans
+    ($30-200, 30-90 days) WITHOUT credit bureau reporting.
+
+    KEY MODEL ASSUMPTIONS:
+    ----------------------
+    1. NO BUREAU REPORTING - Payments don't build traditional credit history
+    2. PURE CASH FLOW - All scoring based on observed account behavior
+    3. NO EMPLOYMENT VERIFICATION - Income inferred from deposits
+    4. HIGHER DEFAULT RATES - 12-15% blended (vs 5-8% with bureau)
+
+    DATA SOURCES:
+    -------------
+    - Transaction history from MyBambu accounts
+    - Deposit patterns (frequency, amounts, sources)
+    - Balance history (min, avg, volatility)
+    - Account behavior (active days, transactions)
+    - NO external bureau data
+
+    SCORING METHODOLOGY:
+    --------------------
+    Cash Flow Risk Score (CFRS) =
+        (Cash Flow Capacity × 0.50) +
+        (Transaction Pattern × 0.30) +
+        (Account Behavior × 0.20)
+
+    TIER STRUCTURE:
+    ---------------
+    Tier 1 (Starter): $30-50, CFRS 60+, 30 days, 54% APR
+    Tier 2 (Basic): $51-100, CFRS 65+, 45 days, 48% APR
+    Tier 3 (Standard): $101-150, CFRS 70+, 60 days, 36% APR
+    Tier 4 (Premium): $151-200, CFRS 75+, 90 days, 30% APR
+
+    FEE STRUCTURE:
+    --------------
+    - Application Fee: $2.00-3.50 (covers processing)
+    - Origination Fee: 2.5-5% (admin costs)
+    - Service Fee: 1.5-3% (loan management)
+    - APR: 30-54% (cost of funds)
+
+    CONVERSION FUNNEL:
+    ------------------
+    Landing → Lead: 15%
+    Lead → App Paid: 65%
+    App Paid → Approved: 72%
+    Approved → Accepted: 82%
+    Accepted → Disbursed: 98%
+    Disbursed → Repaid: 86%
+    Overall Lead → Repaid: 21%
+
+    CRITICAL INSIGHT:
+    -----------------
+    Lending alone is NOT profitable due to high defaults without bureau.
+    Requires 60%+ cross-sell adoption (account fees, interchange, bill pay)
+    for overall profitability.
+
+    VERSION: 1.0
+    CREATED: 2025
+    AUTHOR: Generated with Claude Code
+    ================================================================================
+    -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="googlebot" content="noindex,nofollow">
+
+    <title>MyBambu Risk Model | Micro-Loans Cash Flow Analysis</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <style>
+        :root {
+            --navy-dark: #00052e;
+            --navy-medium: #001156;
+            --navy-light: #0a2463;
+            --accent-blue: #0156f4;
+            --accent-turquoise: #01CFFB;
+            --accent-green: #17ca60;
+            --risk-low: #22c55e;
+            --risk-moderate: #eab308;
+            --risk-elevated: #f97316;
+            --risk-high: #ef4444;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: var(--navy-dark);
+            color: var(--gray-800);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-turquoise));
+            z-index: 9999;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .nav-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-link {
+            padding: 6px 12px;
+            color: var(--gray-600);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            background: var(--gray-100);
+            color: var(--accent-blue);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--navy-dark), var(--navy-medium), var(--navy-light));
+            color: var(--white);
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(ellipse, rgba(1,207,251,0.15) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .hero .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .hero-stat {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 12px;
+            min-width: 100px;
+        }
+
+        .hero-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-turquoise);
+        }
+
+        .hero-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .section {
+            padding: 50px 40px;
+            border-top: 1px solid var(--gray-200);
+            scroll-margin-top: 60px;
+        }
+
+        .section.alt { background: var(--gray-50); }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: var(--gray-800);
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 4px solid var(--accent-turquoise);
+            display: inline-block;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: var(--gray-800);
+            margin: 25px 0 10px;
+        }
+
+        .description {
+            color: var(--gray-600);
+            margin-bottom: 25px;
+            max-width: 900px;
+        }
+
+        .alert-box {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 5px solid;
+        }
+
+        .alert-box.critical {
+            background: #fef2f2;
+            border-color: var(--risk-high);
+        }
+
+        .alert-box.critical h4 { color: #991b1b; }
+        .alert-box.critical p { color: #7f1d1d; }
+
+        .alert-box.info {
+            background: #f0f9ff;
+            border-color: var(--accent-blue);
+        }
+
+        .alert-box.info h4 { color: #1e40af; }
+        .alert-box.info p { color: #1e3a8a; }
+
+        .alert-box.success {
+            background: #f0fdf4;
+            border-color: var(--risk-low);
+        }
+
+        .alert-box.success h4 { color: #166534; }
+        .alert-box.success p { color: #14532d; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .tier-card {
+            text-align: center;
+            border-top: 4px solid;
+        }
+
+        .tier-card.t1 { border-color: var(--risk-elevated); }
+        .tier-card.t2 { border-color: var(--risk-moderate); }
+        .tier-card.t3 { border-color: var(--accent-blue); }
+        .tier-card.t4 { border-color: var(--risk-low); }
+
+        .tier-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .tier-card .amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--gray-800);
+        }
+
+        .tier-card .details {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--accent-blue);
+            color: var(--white);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        tr:nth-child(even) { background: var(--gray-50); }
+        tr:hover { background: var(--gray-100); }
+
+        .positive { color: var(--risk-low); font-weight: 700; }
+        .negative { color: var(--risk-high); font-weight: 700; }
+        .warning { color: var(--risk-elevated); font-weight: 700; }
+
+        .chart-container {
+            background: var(--gray-50);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--gray-800);
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, var(--navy-dark), var(--accent-blue));
+            color: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+        }
+
+        .formula-box .formula {
+            font-family: monospace;
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .kpi-card {
+            text-align: center;
+            padding: 20px 15px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+
+        .funnel-step .step-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .funnel-step .step-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .funnel-step .step-rate {
+            width: 80px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-turquoise));
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(1,86,244,0.4);
+        }
+
+        footer {
+            background: var(--navy-dark);
+            color: var(--white);
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer p { opacity: 0.9; margin: 5px 0; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .section { padding: 30px 20px; }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="#executive" class="nav-link">Executive Summary</a>
+            <a href="#model" class="nav-link">Risk Model</a>
+            <a href="#tiers" class="nav-link">Tier Structure</a>
+            <a href="#fees" class="nav-link">Fee Structure</a>
+            <a href="#conversion" class="nav-link">Conversion</a>
+            <a href="#projections" class="nav-link">Projections</a>
+            <a href="#kpis" class="nav-link">KPIs</a>
+        </nav>
+
+        <header class="hero">
+            <h1>MyBambu Risk Model</h1>
+            <p class="subtitle">Micro-Loans Cash Flow Analysis | $200 Max | 30-90 Days</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">4</div>
+                    <div class="hero-stat-label">Tiers</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">$200</div>
+                    <div class="hero-stat-label">Max Loan</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">12-15%</div>
+                    <div class="hero-stat-label">Target Default</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">21%</div>
+                    <div class="hero-stat-label">Conversion</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Executive Summary -->
+        <section id="executive" class="section">
+            <h2>Executive Summary</h2>
+            <p class="description">
+                As Chief Risk Officer, I've analyzed the current model and propose an optimized framework
+                for micro-loans that addresses critical constraints: Pure Cash Flow scoring without credit bureau reporting.
+            </p>
+
+            <div class="alert-box critical">
+                <h4>Critical Model Corrections</h4>
+                <p style="margin-top:10px;">
+                    <strong>NO BUREAU REPORTING:</strong> Payments do NOT build traditional credit history.
+                    The only incentive is maintaining access to MyBambu products.<br><br>
+                    <strong>PURE CASH FLOW:</strong> No employment verification, no formal income verification.
+                    All scoring derives from observed transactional behavior.
+                </p>
+            </div>
+
+            <h3>Key Findings</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <h4 style="color:var(--risk-high)">Current Model Issues</h4>
+                    <ul style="margin-left:20px;margin-top:10px;color:var(--gray-600)">
+                        <li>Too restrictive: ~40% rejections could be viable</li>
+                        <li>No amount differentiation: Same criteria for $50 vs $200</li>
+                        <li>Ignores digital behavior</li>
+                        <li>Affordability has absolute veto power</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 style="color:var(--risk-low)">Proposed Solution</h4>
+                    <ul style="margin-left:20px;margin-top:10px;color:var(--gray-600)">
+                        <li>4-tier system with graduated limits</li>
+                        <li>Cash Flow Risk Score (CFRS) weighted model</li>
+                        <li>Behavioral incentives program</li>
+                        <li>Cross-sell strategy for profitability</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box info">
+                <h4>Strategy Requirement</h4>
+                <p style="margin-top:10px;">
+                    <strong>Lending alone is NOT profitable</strong> without bureau reporting.
+                    Requires 60%+ cross-sell adoption (account fees, interchange, bill pay) for overall profitability.
+                    Breakeven expected at month 15-18.
+                </p>
+            </div>
+        </section>
+
+        <!-- Risk Model -->
+        <section id="model" class="section alt">
+            <h2>Cash Flow Risk Score (CFRS)</h2>
+            <p class="description">
+                Since we don't use credit bureaus, the model is 100% based on observed cash flow behavior in the MyBambu account.
+            </p>
+
+            <div class="formula-box">
+                <div class="formula">
+                    CFRS = (Cash Flow Capacity × 0.50) + (Transaction Pattern × 0.30) + (Account Behavior × 0.20)
+                </div>
+            </div>
+
+            <h3>1. Observed Income Stability (OIS) - 50% Weight</h3>
+            <p class="description">Inferred income from regular deposits in the account.</p>
+
+            <div class="formula-box">
+                <div class="formula">
+                    Base OIS = (Avg Monthly Deposits / $500) × 100<br>
+                    <small>Adjustments: +15 regular deposits, +10 multiple sources, -20 high volatility, -30 few deposits</small>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Score Range</th>
+                        <th>Monthly Deposits</th>
+                        <th>Pattern</th>
+                        <th>Risk Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>85-100</td>
+                        <td>$600+</td>
+                        <td>Very stable, regular</td>
+                        <td class="positive">Low Risk</td>
+                    </tr>
+                    <tr>
+                        <td>70-84</td>
+                        <td>$400-600</td>
+                        <td>Stable</td>
+                        <td style="color:var(--risk-moderate)">Moderate</td>
+                    </tr>
+                    <tr>
+                        <td>50-69</td>
+                        <td>$250-400</td>
+                        <td>Irregular</td>
+                        <td class="warning">Elevated</td>
+                    </tr>
+                    <tr>
+                        <td>0-49</td>
+                        <td>&lt;$250</td>
+                        <td>Insufficient</td>
+                        <td class="negative">High Risk</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2. Cash Flow Coverage Ratio (CFCR) - 30% Weight</h3>
+            <p class="description">Can the balance cover loan payment + essential expenses?</p>
+
+            <div class="formula-box">
+                <div class="formula">
+                    CFCR = (Min Balance Projected - Loan Payment) / Essential Expenses<br>
+                    <small>CFCR > 2.0 = 100pts | 1.5-2.0 = 85pts | 1.0-1.5 = 70pts | 0.7-1.0 = 50pts | &lt;0.7 = 30pts</small>
+                </div>
+            </div>
+
+            <h3>3. Transaction Velocity & Consistency (TVC) - 20% Weight</h3>
+            <p class="description">Frequency, volume, and consistency of account activity.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Condition</th>
+                        <th>Adjustment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Account active >40 days last 60</td>
+                        <td class="positive">+15</td>
+                    </tr>
+                    <tr>
+                        <td>80+ transactions in 60 days</td>
+                        <td class="positive">+10</td>
+                    </tr>
+                    <tr>
+                        <td>Balance never reached $0</td>
+                        <td class="positive">+10</td>
+                    </tr>
+                    <tr>
+                        <td>Less than 10 active days</td>
+                        <td class="negative">-20</td>
+                    </tr>
+                    <tr>
+                        <td>Balance at $0 for 7+ days</td>
+                        <td class="negative">-25</td>
+                    </tr>
+                    <tr>
+                        <td>Dormant account (activity only for application)</td>
+                        <td class="negative">-30</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Tier Structure -->
+        <section id="tiers" class="section">
+            <h2>Tier Structure</h2>
+            <p class="description">
+                Four tiers with progressively higher limits based on CFRS score and payment history.
+                Graduation is slow and behavior-based due to lack of bureau reporting.
+            </p>
+
+            <div class="grid-4">
+                <div class="card tier-card t1">
+                    <h4>Tier 1: Starter</h4>
+                    <div class="amount">$30-50</div>
+                    <div class="details">
+                        CFRS: 60+<br>
+                        Balance: $200+<br>
+                        Income: $300/mo<br>
+                        APR: 54%<br>
+                        Term: 30 days
+                    </div>
+                </div>
+                <div class="card tier-card t2">
+                    <h4>Tier 2: Basic</h4>
+                    <div class="amount">$51-100</div>
+                    <div class="details">
+                        CFRS: 65+<br>
+                        Balance: $300+<br>
+                        Income: $400/mo<br>
+                        APR: 48%<br>
+                        Term: 45 days
+                    </div>
+                </div>
+                <div class="card tier-card t3">
+                    <h4>Tier 3: Standard</h4>
+                    <div class="amount">$101-150</div>
+                    <div class="details">
+                        CFRS: 70+<br>
+                        Balance: $450+<br>
+                        Income: $500/mo<br>
+                        APR: 36%<br>
+                        Term: 60 days
+                    </div>
+                </div>
+                <div class="card tier-card t4">
+                    <h4>Tier 4: Premium</h4>
+                    <div class="amount">$151-200</div>
+                    <div class="details">
+                        CFRS: 75+<br>
+                        Balance: $600+<br>
+                        Income: $650/mo<br>
+                        APR: 30%<br>
+                        Term: 90 days
+                    </div>
+                </div>
+            </div>
+
+            <h3>Expected Default Rates by Tier</h3>
+            <div class="chart-container">
+                <div class="chart-title">Default Rate Without Bureau Reporting</div>
+                <canvas id="defaultChart"></canvas>
+            </div>
+
+            <div class="alert-box info">
+                <h4>Graduation Timeline</h4>
+                <p style="margin-top:10px;">
+                    Starter → Basic: 2-3 months (2 loans paid on time)<br>
+                    Basic → Standard: 5-6 months cumulative<br>
+                    Standard → Premium: 12-15 months cumulative<br>
+                    <strong>Total $0 to $200: 12-18 months</strong>
+                </p>
+            </div>
+        </section>
+
+        <!-- Fee Structure -->
+        <section id="fees" class="section alt">
+            <h2>Fee Structure</h2>
+            <p class="description">
+                Complete breakdown of all fees charged per loan tier.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Amount</th>
+                        <th>App Fee</th>
+                        <th>Origination</th>
+                        <th>Service Fee</th>
+                        <th>APR</th>
+                        <th>Total Fees</th>
+                        <th>Effective Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Starter</strong></td>
+                        <td>$40 avg</td>
+                        <td>$2.00</td>
+                        <td>5% ($2.00)</td>
+                        <td>3% ($1.20)</td>
+                        <td>54%</td>
+                        <td>$7.00</td>
+                        <td>17.5%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Basic</strong></td>
+                        <td>$75 avg</td>
+                        <td>$2.50</td>
+                        <td>4% ($3.00)</td>
+                        <td>2.5% ($1.88)</td>
+                        <td>48%</td>
+                        <td>$11.82</td>
+                        <td>15.8%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard</strong></td>
+                        <td>$125 avg</td>
+                        <td>$3.00</td>
+                        <td>3% ($3.75)</td>
+                        <td>2% ($2.50)</td>
+                        <td>36%</td>
+                        <td>$16.65</td>
+                        <td>13.3%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Premium</strong></td>
+                        <td>$175 avg</td>
+                        <td>$3.50</td>
+                        <td>2.5% ($4.38)</td>
+                        <td>1.5% ($2.63)</td>
+                        <td>30%</td>
+                        <td>$23.46</td>
+                        <td>13.4%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Unit Economics by Tier</h3>
+            <div class="chart-container">
+                <div class="chart-title">Profit/Loss Per Loan (100 loans)</div>
+                <canvas id="unitEconChart"></canvas>
+            </div>
+
+            <div class="alert-box critical">
+                <h4>Critical Finding: Tiers 1-3 Are Loss Leaders</h4>
+                <p style="margin-top:10px;">
+                    <strong>Tier 1:</strong> -$3.47 per loan<br>
+                    <strong>Tier 2:</strong> -$2.53 per loan<br>
+                    <strong>Tier 3:</strong> +$0.70 per loan (marginal)<br>
+                    <strong>Tier 4:</strong> +$8.48 per loan (profitable)<br><br>
+                    <em>Only Tier 4 generates meaningful profit. Cross-sell revenue is essential.</em>
+                </p>
+            </div>
+        </section>
+
+        <!-- Conversion Funnel -->
+        <section id="conversion" class="section">
+            <h2>Conversion Funnel Analysis</h2>
+            <p class="description">
+                Complete funnel from landing page to successful repayment.
+            </p>
+
+            <div class="funnel-step">
+                <span class="step-name">Landing Page Visitors</span>
+                <span class="step-value">10,000</span>
+                <span class="step-rate">-</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Leads Generated (click Apply)</span>
+                <span class="step-value">1,500</span>
+                <span class="step-rate">15%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Applications Started</span>
+                <span class="step-value">975</span>
+                <span class="step-rate">65%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Application Fee Paid</span>
+                <span class="step-value">634</span>
+                <span class="step-rate">65%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Approved</span>
+                <span class="step-value">456</span>
+                <span class="step-rate">72%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Offer Accepted</span>
+                <span class="step-value">374</span>
+                <span class="step-rate">82%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Loans Disbursed</span>
+                <span class="step-value">366</span>
+                <span class="step-rate">98%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Successfully Repaid</span>
+                <span class="step-value">315</span>
+                <span class="step-rate">86%</span>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Conversion Funnel Visualization</div>
+                <canvas id="funnelChart"></canvas>
+            </div>
+
+            <div class="alert-box success">
+                <h4>Overall Conversion: Lead → Repaid = 21%</h4>
+                <p style="margin-top:10px;">
+                    Key drop-off points to optimize:<br>
+                    • App Start → Fee Paid (35% drop) - Fee is psychological barrier<br>
+                    • Approved → Accepted (18% drop) - Amount too low or fees too high
+                </p>
+            </div>
+        </section>
+
+        <!-- Financial Projections -->
+        <section id="projections" class="section alt">
+            <h2>24-Month Financial Projections</h2>
+            <p class="description">
+                Conservative projections including cross-sell revenue required for profitability.
+            </p>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <div class="chart-title">Monthly Profit/Loss Trajectory</div>
+                    <canvas id="projectionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Revenue Mix (Month 24)</div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+
+            <h3>24-Month Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Loans</th>
+                        <th>Volume</th>
+                        <th>Default</th>
+                        <th>Lending P&L</th>
+                        <th>Cross-Sell</th>
+                        <th>Net P&L</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Month 1-6</td>
+                        <td>3,000</td>
+                        <td>$135K</td>
+                        <td>18%</td>
+                        <td class="negative">-$31K</td>
+                        <td>$0</td>
+                        <td class="negative">-$31K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 7-12</td>
+                        <td>5,500</td>
+                        <td>$413K</td>
+                        <td>14%</td>
+                        <td class="negative">-$55K</td>
+                        <td>$49K</td>
+                        <td class="negative">-$6K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 13-18</td>
+                        <td>8,000</td>
+                        <td>$800K</td>
+                        <td>11%</td>
+                        <td class="negative">-$60K</td>
+                        <td>$132K</td>
+                        <td class="positive">+$72K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 19-24</td>
+                        <td>11,000</td>
+                        <td>$1.32M</td>
+                        <td>10%</td>
+                        <td class="negative">-$91K</td>
+                        <td>$242K</td>
+                        <td class="positive">+$151K</td>
+                    </tr>
+                    <tr style="font-weight:700;background:var(--gray-100)">
+                        <td>Total 24 Months</td>
+                        <td>27,500</td>
+                        <td>$2.67M</td>
+                        <td>13%</td>
+                        <td class="negative">-$237K</td>
+                        <td>$423K</td>
+                        <td class="positive">+$186K</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box info">
+                <h4>Key Insight: Cross-Sell is Essential</h4>
+                <p style="margin-top:10px;">
+                    Without cross-sell revenue (account fees, interchange, bill pay, remittances),
+                    the lending business generates a <strong>24-month loss of -$237K</strong>.<br><br>
+                    With 60%+ cross-sell adoption, the combined business generates
+                    <strong>+$186K profit</strong> with 7% ROI.
+                </p>
+            </div>
+        </section>
+
+        <!-- KPIs -->
+        <section id="kpis" class="section">
+            <h2>Key Performance Indicators</h2>
+            <p class="description">
+                Primary metrics to monitor for portfolio health and profitability.
+            </p>
+
+            <h3>Portfolio Health Metrics</h3>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-elevated)">&lt;18%</div>
+                    <div class="kpi-label">PAR30 Target</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-high)">&lt;12%</div>
+                    <div class="kpi-label">Default Rate</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-low)">&gt;75%</div>
+                    <div class="kpi-label">Recovery Rate</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--accent-blue)">&gt;65%</div>
+                    <div class="kpi-label">Repeat Rate</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--accent-turquoise)">&gt;70%</div>
+                    <div class="kpi-label">Graduation Rate</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-low)">&gt;$280</div>
+                    <div class="kpi-label">Avg Balance</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top:30px">Alert Thresholds</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>Target</th>
+                        <th>Yellow Alert</th>
+                        <th>Red Alert</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PAR30</td>
+                        <td>&lt;18%</td>
+                        <td>18-22%</td>
+                        <td>&gt;22%</td>
+                        <td>Freeze Tier 1-2</td>
+                    </tr>
+                    <tr>
+                        <td>Default Rate</td>
+                        <td>&lt;12%</td>
+                        <td>12-15%</td>
+                        <td>&gt;15%</td>
+                        <td>Increase CFRS +5</td>
+                    </tr>
+                    <tr>
+                        <td>Recovery Rate</td>
+                        <td>&gt;75%</td>
+                        <td>70-75%</td>
+                        <td>&lt;70%</td>
+                        <td>Escalate collection</td>
+                    </tr>
+                    <tr>
+                        <td>Repeat Rate</td>
+                        <td>&gt;65%</td>
+                        <td>60-65%</td>
+                        <td>&lt;60%</td>
+                        <td>Review incentives</td>
+                    </tr>
+                    <tr>
+                        <td>Cross-Sell Rate</td>
+                        <td>&gt;60%</td>
+                        <td>50-60%</td>
+                        <td>&lt;50%</td>
+                        <td>Critical - unprofitable</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="section alt">
+            <h2>Final Recommendations</h2>
+
+            <div class="grid-2">
+                <div class="alert-box success">
+                    <h4>DO - Priority Actions</h4>
+                    <ul style="margin:10px 0 0 20px;color:#14532d">
+                        <li>Implement 4-tier system immediately</li>
+                        <li>Activate behavioral incentives program</li>
+                        <li>Cross-sell from day 1 (critical)</li>
+                        <li>Proactive watch list monitoring</li>
+                        <li>SMS/Push payment reminders</li>
+                    </ul>
+                </div>
+                <div class="alert-box critical">
+                    <h4>DON'T - Avoid</h4>
+                    <ul style="margin:10px 0 0 20px;color:#7f1d1d">
+                        <li>Lower CFRS below 55 (exponential default)</li>
+                        <li>Approve Tier 4 with CFRS &lt;70</li>
+                        <li>Ignore PAR30 &gt;10% alerts</li>
+                        <li>Expand without 6 months of data</li>
+                        <li>Expect profit from lending alone</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box info" style="margin-top:20px">
+                <h4>Investment Requirements</h4>
+                <p style="margin-top:10px">
+                    <strong>Total Investment (18 months):</strong> $280,000-350,000<br>
+                    <strong>Payback Period:</strong> 24-30 months<br>
+                    <strong>Year 3+ ROI:</strong> 15-22% sustainable<br><br>
+                    <strong>Recommendation: APPROVE with realistic expectations</strong>
+                </p>
+            </div>
+
+            <div style="text-align:center;margin-top:30px">
+                <button class="btn" onclick="window.print()">Print Report</button>
+                <button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="margin-left:10px">Back to Top</button>
+            </div>
+        </section>
+
+        <footer>
+            <p><strong>MyBambu Risk Model - Complete Analysis</strong></p>
+            <p>Pure Cash Flow Micro-Lending Without Bureau Reporting</p>
+            <p style="margin-top:15px;font-size:0.85rem">
+                Last Updated: <span id="lastUpdated"></span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set('plugins.datalabels', { display: false });
+
+        // Default Rate Chart
+        new Chart(document.getElementById('defaultChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Tier 1 (Starter)', 'Tier 2 (Basic)', 'Tier 3 (Standard)', 'Tier 4 (Premium)', 'Blended'],
+                datasets: [{
+                    label: 'Default Rate %',
+                    data: [20, 14, 9, 5, 13],
+                    backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e', '#6366f1'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 25, title: { display: true, text: 'Default Rate %' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: v => v + '%'
+                    }
+                }
+            }
+        });
+
+        // Unit Economics Chart
+        new Chart(document.getElementById('unitEconChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4'],
+                datasets: [{
+                    label: 'Profit/Loss per Loan',
+                    data: [-3.47, -2.53, 0.70, 8.48],
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'USD per Loan' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: v => '$' + v.toFixed(2)
+                    }
+                }
+            }
+        });
+
+        // Funnel Chart
+        new Chart(document.getElementById('funnelChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Visitors', 'Leads', 'App Started', 'Fee Paid', 'Approved', 'Accepted', 'Disbursed', 'Repaid'],
+                datasets: [{
+                    label: 'Count',
+                    data: [10000, 1500, 975, 634, 456, 374, 366, 315],
+                    backgroundColor: '#0156f4',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Projection Chart
+        new Chart(document.getElementById('projectionChart'), {
+            type: 'line',
+            data: {
+                labels: ['M1-6', 'M7-12', 'M13-18', 'M19-24'],
+                datasets: [
+                    {
+                        label: 'Lending P&L',
+                        data: [-31, -55, -60, -91],
+                        borderColor: '#ef4444',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Cross-Sell Revenue',
+                        data: [0, 49, 132, 242],
+                        borderColor: '#22c55e',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Net P&L',
+                        data: [-31, -6, 72, 151],
+                        borderColor: '#0156f4',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'USD (thousands)' } }
+                }
+            }
+        });
+
+        // Revenue Mix Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Account Fees', 'Interchange', 'Bill Pay', 'Remittances', 'Savings Spread'],
+                datasets: [{
+                    data: [72, 96, 24, 36, 14],
+                    backgroundColor: ['#0156f4', '#01CFFB', '#17ca60', '#f97316', '#8b5cf6']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Scroll progress
+        window.addEventListener('scroll', () => {
+            const progress = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            document.getElementById('scrollProgress').style.width = progress + '%';
+        });
+
+        // Timestamp
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
