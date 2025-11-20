@@ -174,7 +174,7 @@
         }
 
         .hero {
-            background: linear-gradient(135deg, #00A651, #00C853, #4CAF50);
+            background: #002044;
             color: var(--white);
             padding: 60px 40px;
             text-align: center;
@@ -531,40 +531,18 @@
         <section id="executive" class="section">
             <h2>Executive Summary</h2>
             <p class="description">
-                As Chief Risk Officer, I've analyzed the current model and propose an optimized framework
+                The current model proposes an optimized framework
                 for micro-loans that addresses critical constraints: Pure Cash Flow scoring without credit bureau reporting.
             </p>
 
-            <div class="alert-box critical">
-                <h4>Critical Model Corrections</h4>
-                <p style="margin-top:10px;">
-                    <strong>NO BUREAU REPORTING:</strong> Payments do NOT build traditional credit history.
-                    The only incentive is maintaining access to MyBambu products.<br><br>
-                    <strong>PURE CASH FLOW:</strong> No employment verification, no formal income verification.
-                    All scoring derives from observed transactional behavior.
-                </p>
-            </div>
-
             <h3>Key Findings</h3>
-            <div class="grid-2">
-                <div class="card">
-                    <h4 style="color:var(--risk-high)">Current Model Issues</h4>
-                    <ul style="margin-left:20px;margin-top:10px;color:var(--gray-600)">
-                        <li>Too restrictive: ~40% rejections could be viable</li>
-                        <li>No amount differentiation: Same criteria for $50 vs $200</li>
-                        <li>Ignores digital behavior</li>
-                        <li>Affordability has absolute veto power</li>
-                    </ul>
-                </div>
-                <div class="card">
-                    <h4 style="color:var(--risk-low)">Proposed Solution</h4>
-                    <ul style="margin-left:20px;margin-top:10px;color:var(--gray-600)">
-                        <li>4-tier system with graduated limits</li>
-                        <li>Cash Flow Risk Score (CFRS) weighted model</li>
-                        <li>Behavioral incentives program</li>
-                        <li>Cross-sell strategy for profitability</li>
-                    </ul>
-                </div>
+            <div class="card" style="margin-top:15px;">
+                <ul style="margin-left:20px;color:var(--gray-600)">
+                    <li>4-tier system with graduated limits</li>
+                    <li>Cash Flow Risk Score (CFRS) weighted model</li>
+                    <li>Behavioral incentives program</li>
+                    <li>Cross-sell strategy for profitability</li>
+                </ul>
             </div>
 
             <div class="alert-box info">
@@ -844,11 +822,11 @@
         <section id="conversion" class="section">
             <h2>Conversion Funnel Analysis</h2>
             <p class="description">
-                Complete funnel from landing page to successful repayment.
+                Complete funnel from app to successful repayment.
             </p>
 
             <div class="funnel-step">
-                <span class="step-name">Landing Page Visitors</span>
+                <span class="step-name">App Visitors</span>
                 <span class="step-value">10,000</span>
                 <span class="step-rate">-</span>
             </div>
@@ -1144,7 +1122,7 @@
                 datasets: [{
                     label: 'Default Rate %',
                     data: [20, 14, 9, 5, 13],
-                    backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e', '#6366f1'],
+                    backgroundColor: ['#002044', '#006a48', '#3b82f6', '#22c55e', '#6366f1'],
                     borderRadius: 6
                 }]
             },
@@ -1198,7 +1176,7 @@
         new Chart(document.getElementById('funnelChart'), {
             type: 'bar',
             data: {
-                labels: ['Visitors', 'Leads', 'App Started', 'Fee Paid', 'Approved', 'Accepted', 'Disbursed', 'Repaid'],
+                labels: ['App Visitors', 'Leads', 'App Started', 'Fee Paid', 'Approved', 'Accepted', 'Disbursed', 'Repaid'],
                 datasets: [{
                     label: 'Count',
                     data: [10000, 1500, 975, 634, 456, 374, 366, 315],
