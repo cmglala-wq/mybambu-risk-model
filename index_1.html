@@ -4886,15 +4886,21 @@
             }
         });
 
-        // Funnel Chart
+        // Funnel Chart - Real Data
         new Chart(document.getElementById('funnelChart'), {
             type: 'bar',
             data: {
-                labels: ['Active Users', 'Leads', 'App Started', 'Fee Paid', 'Approved', 'Accepted', 'Disbursed', 'Repaid'],
+                labels: ['Active Users', 'Tier 3 (70+)', 'Tier 2 (65-69)', 'Tier 1 (60-64)', 'Denied (<60)'],
                 datasets: [{
-                    label: 'Count',
-                    data: [45213, 1500, 975, 634, 456, 374, 366, 315],
-                    backgroundColor: '#1863DC',
+                    label: 'Users',
+                    data: [89552, 6716, 6375, 2068, 74393],
+                    backgroundColor: [
+                        '#6c757d',  // Active Users - gray
+                        '#0D1752',  // Tier 3 - dark blue
+                        '#17CA60',  // Tier 2 - green
+                        '#1863DC',  // Tier 1 - blue
+                        '#dc3545'   // Denied - red
+                    ],
                     borderRadius: 4
                 }]
             },
@@ -4905,9 +4911,29 @@
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.x.toLocaleString();
+                                return value + ' users';
+                            },
                             afterBody: function(context) {
-                                const rates = ['', '15% of users', '65% of leads', '65% start', '72% of paid', '82% of approved', '98% of accepted', '86% of disbursed'];
+                                const rates = [
+                                    '100% - All analyzed users',
+                                    '7.50% - Highest tier, $1.3M capacity',
+                                    '7.12% - Mid tier, $956K capacity',
+                                    '2.31% - Entry tier, $207K capacity',
+                                    '83.07% - Below approval threshold'
+                                ];
                                 return rates[context[0].dataIndex];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return (value/1000).toFixed(0) + 'k';
                             }
                         }
                     }
