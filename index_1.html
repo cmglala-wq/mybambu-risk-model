@@ -3109,17 +3109,6 @@
                     CFRS = (Affordability × 0.40) + (Transaction Velocity × 0.25) + (Deposit Stability × 0.20) + (Behavior × 0.15)
                 </div>
             </div>
-
-            <!-- Daily Cash Flow Projection Chart -->
-            <div class="chart-container animate-on-scroll">
-                <div class="chart-title">
-                    <span class="tooltip-trigger">Daily Cash Flow Projection (CFA Calculation)
-                        <span class="tooltip-content">Shows projected balance over 30 days based on avg daily income minus expenses. Green zone = can cover loan, Red zone = risk of default</span>
-                    </span>
-                </div>
-                <canvas id="cashFlowProjectionChart"></canvas>
-            </div>
-
             <!-- Indicator Weights Chart -->
             <div class="chart-container animate-on-scroll">
                 <div class="chart-title" style="text-align: center;">CFRS Indicator Weights</div>
@@ -3133,6 +3122,17 @@
                     <div id="pillarWeightsLegend"></div>
                 </div>
             </div>
+
+            <!-- Daily Cash Flow Projection Chart -->
+            <div class="chart-container animate-on-scroll">
+                <div class="chart-title">
+                    <span class="tooltip-trigger">Daily Cash Flow Projection (CFA Calculation)
+                        <span class="tooltip-content">Shows projected balance over 30 days based on avg daily income minus expenses. Green zone = can cover loan, Red zone = risk of default</span>
+                    </span>
+                </div>
+                <canvas id="cashFlowProjectionChart"></canvas>
+            </div>
+
 
             <!-- Heatmap -->
             <div class="heatmap-container animate-on-scroll">
