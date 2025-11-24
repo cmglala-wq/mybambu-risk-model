@@ -1,0 +1,4665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+    ================================================================================
+    MYBAMBU RISK MODEL - MICRO-LOANS CASH FLOW ANALYSIS
+    Complete Documentation & Interactive Dashboard
+    ================================================================================
+
+    METHODOLOGY DOCUMENTATION
+    =========================
+    This report documents a Pure Cash Flow risk assessment model for micro-loans
+    ($30-200, 30-90 days) WITHOUT credit bureau reporting.
+
+    KEY MODEL ASSUMPTIONS:
+    ----------------------
+    1. NO BUREAU REPORTING - Payments don't build traditional credit history
+    2. PURE CASH FLOW - All scoring based on observed account behavior
+    3. NO EMPLOYMENT VERIFICATION - Income inferred from deposits
+    4. HIGHER DEFAULT RATES - 12-15% blended (vs 5-8% with bureau)
+
+    DATA SOURCES:
+    -------------
+    - Transaction history from MyBambu accounts
+    - Deposit patterns (frequency, amounts, sources)
+    - Balance history (min, avg, volatility)
+    - Account behavior (active days, transactions)
+    - NO external bureau data
+
+    SCORING METHODOLOGY:
+    --------------------
+    Cash Flow Risk Score (CFRS) =
+        (Cash Flow Capacity × 0.50) +
+        (Transaction Pattern × 0.30) +
+        (Account Behavior × 0.20)
+
+    TIER STRUCTURE:
+    ---------------
+    Tier 1: $100, CFA Score 60-74 (Entry-level, protege P&L)
+    Tier 2: $150, CFA Score 75-89 (Cash flow sólido)
+    Tier 3: $200, CFA Score 90-100 (Bajo riesgo, máxima probabilidad de repago)
+
+    FEE STRUCTURE:
+    --------------
+    - Application Fee: $2.00-3.50 (covers processing)
+    - Origination Fee: 2.5-5% (admin costs)
+    - Service Fee: 1.5-3% (loan management)
+    - APR: 30-54% (cost of funds)
+
+    CONVERSION FUNNEL:
+    ------------------
+    Landing → Lead: 15%
+    Lead → App Paid: 65%
+    App Paid → Approved: 72%
+    Approved → Accepted: 82%
+    Accepted → Disbursed: 98%
+    Disbursed → Repaid: 86%
+    Overall Lead → Repaid: 21%
+
+    CRITICAL INSIGHT:
+    -----------------
+    Lending alone is NOT profitable due to high defaults without bureau.
+    Requires 60%+ cross-sell adoption (account fees, interchange, bill pay)
+    for overall profitability.
+
+    VERSION: 1.0
+    CREATED: 2025
+    AUTHOR: Generated with Claude Code
+    ================================================================================
+    -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="googlebot" content="noindex,nofollow">
+
+    <title>MyBambu Risk Model | Micro-Loans Cash Flow Analysis</title>
+
+    <!-- Google Fonts - Nunito (MyBambu brand font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <style>
+        :root {
+            /* MyBambu Official Brand Colors */
+            --primary-blue: #1863DC;
+            --secondary-blue: #296BFF;
+            --primary-green: #17CA60;
+            --bright-green: #09FC04;
+            --navy-dark: #0D1752;
+            --light-green: #B2DFDB;
+            --background: #FFFFFF;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+
+            /* Legacy mappings for compatibility */
+            --accent-blue: #1863DC;
+            --accent-turquoise: #296BFF;
+            --accent-green: #17CA60;
+            --risk-low: #17CA60;
+            --risk-moderate: #eab308;
+            --risk-elevated: #f97316;
+            --risk-high: #ef4444;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #757575;
+            --gray-800: #212121;
+            --blue-accent: #1863DC;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Nunito', -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), var(--secondary-green));
+            z-index: 9999;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(13, 23, 82, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 24px;
+            border-bottom: 3px solid var(--primary-green);
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-link {
+            padding: 10px 18px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(24, 99, 220, 0.3);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--primary-green);
+            border-radius: 50%;
+        }
+
+        /* Spacer for fixed nav */
+        .nav-spacer {
+            height: 60px;
+        }
+
+        /* ============================================
+           EXECUTIVE HERO BANNER - Premium Design
+           For C-Suite Presentation
+           ============================================ */
+        .hero {
+            background: linear-gradient(135deg, #0D1752 0%, #1a2a6c 50%, #0D1752 100%);
+            color: var(--white);
+            min-height: 100vh;
+            padding: 100px 60px 60px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated gradient background */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(24, 99, 220, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(23, 202, 96, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 50% 80%, rgba(24, 99, 220, 0.2) 0%, transparent 50%);
+            animation: gradientPulse 8s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes gradientPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Floating particles */
+        .hero-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(23, 202, 96, 0.6);
+            border-radius: 50%;
+            animation: particleFloat 15s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; animation-duration: 12s; }
+        .particle:nth-child(2) { left: 20%; top: 60%; animation-delay: 2s; animation-duration: 14s; width: 6px; height: 6px; background: rgba(24, 99, 220, 0.5); }
+        .particle:nth-child(3) { left: 35%; top: 30%; animation-delay: 4s; animation-duration: 16s; }
+        .particle:nth-child(4) { left: 50%; top: 70%; animation-delay: 1s; animation-duration: 13s; width: 5px; height: 5px; }
+        .particle:nth-child(5) { left: 65%; top: 25%; animation-delay: 3s; animation-duration: 15s; background: rgba(24, 99, 220, 0.4); }
+        .particle:nth-child(6) { left: 75%; top: 55%; animation-delay: 5s; animation-duration: 11s; width: 3px; height: 3px; }
+        .particle:nth-child(7) { left: 85%; top: 35%; animation-delay: 2.5s; animation-duration: 14s; }
+        .particle:nth-child(8) { left: 90%; top: 75%; animation-delay: 0.5s; animation-duration: 12s; background: rgba(23, 202, 96, 0.5); width: 5px; height: 5px; }
+        .particle:nth-child(9) { left: 5%; top: 80%; animation-delay: 3.5s; animation-duration: 16s; }
+        .particle:nth-child(10) { left: 45%; top: 15%; animation-delay: 1.5s; animation-duration: 13s; width: 4px; height: 4px; background: rgba(24, 99, 220, 0.6); }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.6; }
+            25% { transform: translateY(-30px) translateX(10px) scale(1.2); opacity: 1; }
+            50% { transform: translateY(-15px) translateX(-15px) scale(0.8); opacity: 0.8; }
+            75% { transform: translateY(-40px) translateX(5px) scale(1.1); opacity: 0.9; }
+        }
+
+        /* Geometric accent lines */
+        .hero-accent-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .accent-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(23, 202, 96, 0.3), transparent);
+            height: 1px;
+        }
+
+        .accent-line:nth-child(1) { top: 20%; left: 0; width: 30%; animation: lineGlow 4s ease-in-out infinite; }
+        .accent-line:nth-child(2) { top: 40%; right: 0; width: 25%; animation: lineGlow 4s ease-in-out infinite 1s; }
+        .accent-line:nth-child(3) { bottom: 30%; left: 0; width: 20%; animation: lineGlow 4s ease-in-out infinite 2s; }
+
+        @keyframes lineGlow {
+            0%, 100% { opacity: 0.3; transform: scaleX(1); }
+            50% { opacity: 0.8; transform: scaleX(1.1); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Logo Section */
+        .hero-logo-container {
+            margin-bottom: 30px;
+            animation: logoReveal 1s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes logoReveal {
+            0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .hero-logo {
+            max-width: 220px;
+            filter: drop-shadow(0 10px 40px rgba(0,0,0,0.4));
+            transition: transform 0.3s ease;
+        }
+
+        .hero-logo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Main Title */
+        .hero-title-container {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: titleReveal 1s ease-out 0.3s forwards;
+            opacity: 0;
+        }
+
+        @keyframes titleReveal {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0;
+            color: white;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+
+        .hero-title .highlight {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #2ecc71 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .hero-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), transparent);
+            border-radius: 2px;
+        }
+
+        /* Subtitle */
+        .hero-subtitle {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 15px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            animation: subtitleReveal 1s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        @keyframes subtitleReveal {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Version Badge */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(23, 202, 96, 0.15);
+            border: 1px solid rgba(23, 202, 96, 0.4);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-bottom: 40px;
+            animation: badgeReveal 1s ease-out 0.7s forwards;
+            opacity: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes badgeReveal {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .hero-badge i {
+            font-size: 0.75rem;
+        }
+
+        /* Executive Stats Grid */
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            animation: statsReveal 1s ease-out 0.9s forwards;
+            opacity: 0;
+        }
+
+        @keyframes statsReveal {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-stat {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hero-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-green));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .hero-stat:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(23, 202, 96, 0.3);
+        }
+
+        .hero-stat:hover::before {
+            transform: scaleX(1);
+        }
+
+        .hero-stat-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-green) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(24, 99, 220, 0.3);
+        }
+
+        .hero-stat:nth-child(1) .hero-stat-icon { background: linear-gradient(135deg, #1863DC, #296BFF); }
+        .hero-stat:nth-child(2) .hero-stat-icon { background: linear-gradient(135deg, #17CA60, #2ecc71); }
+        .hero-stat:nth-child(3) .hero-stat-icon { background: linear-gradient(135deg, #0D1752, #1a2a6c); }
+        .hero-stat:nth-child(4) .hero-stat-icon { background: linear-gradient(135deg, #1863DC, #17CA60); }
+
+        .hero-stat-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .hero-stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            cursor: pointer;
+            animation: scrollBounce 2s ease-in-out infinite;
+        }
+
+        .scroll-indicator-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scroll-indicator span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+        }
+
+        .scroll-indicator i {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        .scroll-indicator:hover i {
+            color: var(--primary-green);
+        }
+
+        @keyframes scrollBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        /* Decorative corner accents */
+        .hero-corner {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            z-index: 2;
+            opacity: 0.15;
+        }
+
+        .hero-corner.top-left {
+            top: 80px;
+            left: 30px;
+            border-left: 2px solid var(--primary-green);
+            border-top: 2px solid var(--primary-green);
+        }
+
+        .hero-corner.bottom-right {
+            bottom: 60px;
+            right: 30px;
+            border-right: 2px solid var(--primary-blue);
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatImage {
+            0%, 100% { transform: translateY(0) rotate(-1deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(3deg); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        .section {
+            padding: 60px 40px;
+            border-top: 1px solid var(--gray-200);
+            scroll-margin-top: 60px;
+        }
+
+        .section.alt { background: var(--gray-50); }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: var(--gray-800);
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 4px solid var(--primary-green);
+            display: inline-block;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: var(--gray-800);
+            margin: 25px 0 10px;
+        }
+
+        .description {
+            color: #4a5568;
+            margin-bottom: 24px;
+            max-width: 900px;
+            line-height: 1.7;
+        }
+
+        .alert-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+        }
+
+        .alert-box.critical {
+            background: #fef2f2;
+            border-color: var(--risk-high);
+        }
+
+        .alert-box.critical h4 { color: #991b1b; }
+        .alert-box.critical p { color: #7f1d1d; }
+
+        .alert-box.info {
+            background: #f0f9ff;
+            border-color: var(--accent-blue);
+        }
+
+        .alert-box.info h4 { color: #1e40af; }
+        .alert-box.info p { color: #1e3a8a; }
+
+        .alert-box.success {
+            background: #f0fdf4;
+            border-color: var(--risk-low);
+        }
+
+        .alert-box.success h4 { color: #166534; }
+        .alert-box.success p { color: #14532d; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .tier-card {
+            text-align: center;
+            border-top: 4px solid;
+            padding: 20px 16px;
+        }
+
+        .tier-card.t1 { border-color: #1863DC; }
+        .tier-card.t2 { border-color: #17CA60; }
+        .tier-card.t3 { border-color: #0D1752; }
+
+        .tier-card h4 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+
+        .tier-card .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 12px;
+        }
+
+        .tier-card .details {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        /* Tier cards container */
+        #tierGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--primary-green);
+            color: var(--white);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        tr:nth-child(even) { background: var(--gray-50); }
+        tr:hover { background: var(--gray-100); }
+
+        .positive { color: var(--risk-low); font-weight: 700; }
+        .negative { color: var(--risk-high); font-weight: 700; }
+        .warning { color: var(--risk-elevated); font-weight: 700; }
+
+        .chart-container {
+            background: var(--gray-50);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--gray-800);
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, #00A651, #1976D2);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+        }
+
+        .formula-box .formula {
+            font-family: monospace;
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .kpi-card {
+            text-align: center;
+            padding: 20px 15px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+
+        .funnel-step .step-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .funnel-step .step-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .funnel-step .step-rate {
+            width: 80px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #1863DC, #296BFF);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.3s;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(24,99,220,0.4);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #17CA60, #09FC04);
+        }
+
+        .btn-green:hover {
+            box-shadow: 0 8px 20px rgba(23,202,96,0.4);
+        }
+
+        footer {
+            background: linear-gradient(135deg, #0D1752, #1863DC);
+            color: var(--white);
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .footer-logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .fdic-badge {
+            max-width: 120px;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+
+        footer p { opacity: 0.9; margin: 5px 0; }
+
+        @media (max-width: 768px) {
+            .nav-bar {
+                padding: 10px 15px;
+                gap: 5px;
+            }
+            .nav-link {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+            .hero {
+                min-height: auto;
+                padding: 100px 20px 60px;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero .subtitle {
+                font-size: 1rem;
+            }
+            .hero {
+                background: #0D1752;
+            }
+            .hero-split-layout {
+                flex-direction: column;
+                gap: 30px;
+            }
+            .hero-left {
+                flex: 1;
+                align-items: center;
+                padding: 0 20px;
+            }
+            .hero-left h1 {
+                text-align: center;
+                font-size: 2.8rem;
+            }
+            .hero-left .subtitle {
+                text-align: center;
+            }
+            .hero-right {
+                display: none;
+            }
+            .hero-logo {
+                max-width: 180px;
+            }
+            .hero-promo-image {
+                max-width: 100px;
+            }
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .hero-stat {
+                padding: 15px 10px;
+            }
+            .hero-stat-value {
+                font-size: 1.8rem;
+            }
+            .section { padding: 30px 20px; }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            .goal-box {
+                padding: 20px;
+            }
+            .goal-box h4 {
+                font-size: 1.1rem;
+            }
+            .goal-box p {
+                font-size: 0.9rem;
+            }
+            .objective-item {
+                padding: 15px;
+                gap: 12px;
+            }
+            .checkmark-circle {
+                width: 16px;
+                height: 16px;
+            }
+            .checkmark-circle svg {
+                width: 8px;
+                height: 8px;
+            }
+            .objective-title {
+                font-size: 1rem;
+            }
+            .objective-description {
+                font-size: 0.85rem;
+            }
+            .objectives-header h3 {
+                font-size: 1.2rem;
+            }
+            .objectives-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .obj-stat {
+                padding: 18px 12px;
+            }
+            .obj-stat-value {
+                font-size: 1.5rem;
+            }
+            .obj-stat-label {
+                font-size: 0.65rem;
+            }
+            .obj-stat::after {
+                font-size: 0.7rem;
+                top: 8px;
+                right: 8px;
+            }
+            .objectives-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .objective-card {
+                padding: 15px;
+            }
+            .objective-card-title {
+                font-size: 0.8rem;
+            }
+            .checkmark-circle {
+                width: 20px;
+                height: 20px;
+            }
+            .checkmark-circle svg {
+                width: 10px;
+                height: 10px;
+            }
+            .objective-detail-panel {
+                padding: 20px;
+            }
+            .objective-detail-title {
+                font-size: 1rem;
+            }
+            .objective-detail-description {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ============================================
+           INTERACTIVE FEATURES - ANIMATIONS
+           ============================================ */
+
+        /* Scroll Animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .animate-slide-left {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .animate-slide-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .animate-slide-right {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .animate-slide-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .animate-scale {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        .animate-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Staggered animations for grid items */
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+
+        .stagger-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ============================================
+           INTERACTIVE TOOLTIPS
+           ============================================ */
+
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted var(--gray-600);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: var(--navy-dark);
+            color: var(--white);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: max-content;
+            max-width: 300px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            line-height: 1.5;
+        }
+
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: var(--navy-dark);
+        }
+
+        .tooltip-trigger:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Tooltip adjustments for pillar cards */
+        .pillar-card .tooltip-trigger {
+            position: relative;
+        }
+
+        .pillar-card .tooltip-content {
+            bottom: auto;
+            top: 100%;
+            left: 0;
+            transform: translateX(0) translateY(10px);
+            max-width: 280px;
+            white-space: normal;
+        }
+
+        .pillar-card .tooltip-content::after {
+            top: auto;
+            bottom: 100%;
+            border-top-color: transparent;
+            border-bottom-color: var(--navy-dark);
+        }
+
+        .pillar-card .tooltip-trigger:hover .tooltip-content {
+            transform: translateX(0) translateY(5px);
+        }
+
+        .adjustment-item .tooltip-trigger {
+            cursor: help;
+            border-bottom: 1px dotted var(--gray-400);
+        }
+
+        /* ============================================
+           FILTER CONTROLS
+           ============================================ */
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--gray-100);
+            border-radius: 12px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--gray-200);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            color: var(--gray-600);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .filter-btn.t1.active { background: var(--risk-elevated); border-color: var(--risk-elevated); }
+        .filter-btn.t2.active { background: var(--risk-moderate); border-color: var(--risk-moderate); }
+        .filter-btn.t3.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .filter-btn.t4.active { background: var(--risk-low); border-color: var(--risk-low); }
+
+        .filterable {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .filterable.hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        /* ============================================
+           INTERACTIVE CALCULATOR
+           ============================================ */
+
+        .calculator-container {
+            background: linear-gradient(135deg, var(--gray-50), var(--white));
+            border: 2px solid var(--primary-blue);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .calculator-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .calc-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calc-input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .calc-input-group input,
+        .calc-input-group select {
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .calc-input-group input:focus,
+        .calc-input-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .calc-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .calc-result-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--gray-50);
+        }
+
+        .calc-result-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+
+        .calc-result-value.positive { color: var(--risk-low); }
+        .calc-result-value.negative { color: var(--risk-high); }
+
+        .calc-result-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .range-value {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-left: 10px;
+        }
+
+        /* Nav active state */
+        .nav-link.active {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        /* Counter animation */
+        .counter {
+            display: inline-block;
+        }
+
+        /* ============================================
+           ANIMATED CHECKMARKS WITH SHADOW
+           Design: Round checkmarks with pulse animation
+           and subtle shadow for depth perception
+           ============================================ */
+
+        .objective-list {
+            list-style: none;
+            padding: 0;
+            margin: 25px 0;
+        }
+
+        /* Interactive Objective Cards Grid */
+        .objectives-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .objective-card {
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            border: 2px solid var(--gray-200);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .objective-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .objective-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--navy-dark), var(--primary-blue));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .objective-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(13, 23, 82, 0.15);
+            border-color: var(--primary-blue);
+        }
+
+        .objective-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .objective-card.active {
+            border-color: var(--primary-blue);
+            background: linear-gradient(135deg, var(--white) 0%, rgba(24, 99, 220, 0.05) 100%);
+        }
+
+        .objective-card.active::before {
+            transform: scaleX(1);
+        }
+
+        .objective-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkmark-circle {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--primary-blue) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(13, 23, 82, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .objective-card:hover .checkmark-circle,
+        .objective-card.active .checkmark-circle {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(13, 23, 82, 0.5);
+        }
+
+        .checkmark-circle svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .objective-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            line-height: 1.3;
+            flex: 1;
+        }
+
+        .objective-card-icon {
+            color: var(--gray-400);
+            transition: all 0.3s ease;
+        }
+
+        .objective-card:hover .objective-card-icon {
+            color: var(--primary-blue);
+        }
+
+        .objective-card.active .objective-card-icon {
+            transform: rotate(45deg);
+            color: var(--primary-blue);
+        }
+
+        /* Expanded Description Panel */
+        .objective-detail-panel {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--primary-blue) 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            color: var(--white);
+            display: none;
+            animation: slideIn 0.4s ease;
+            box-shadow: 0 10px 30px rgba(13, 23, 82, 0.3);
+        }
+
+        .objective-detail-panel.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .objective-detail-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .objective-detail-title .checkmark-circle {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .objective-detail-description {
+            font-size: 1rem;
+            line-height: 1.7;
+            opacity: 0.95;
+        }
+
+        /* Legacy styles for compatibility */
+        .objective-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+            border-radius: 16px;
+            border-left: 4px solid var(--primary-green);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .objective-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .objective-content {
+            flex: 1;
+        }
+
+        .objective-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .objective-description {
+            font-size: 0.95rem;
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        /* Goal Cards Grid */
+        .goal-cards-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .goal-card {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            background: white;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .goal-card-image-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card-image-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .goal-card-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .goal-card:hover .goal-card-image {
+            transform: scale(1.05);
+        }
+
+        .goal-card-footer {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .goal-card:nth-child(1) .goal-card-footer {
+            background: linear-gradient(135deg, #1863DC 0%, #296BFF 100%);
+        }
+
+        .goal-card:nth-child(2) .goal-card-footer {
+            background: linear-gradient(135deg, #17CA60 0%, #10b981 100%);
+        }
+
+        .goal-card:nth-child(3) .goal-card-footer {
+            background: linear-gradient(135deg, #0D1752 0%, #1a2a6c 100%);
+        }
+
+        .goal-card:nth-child(4) .goal-card-footer {
+            background: linear-gradient(135deg, #2196F3 0%, #1863DC 100%);
+        }
+
+        .goal-card-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .goal-card-title {
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.2;
+        }
+
+        .goal-card-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .goal-card-arrow {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .goal-card:hover .goal-card-arrow {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateX(3px);
+        }
+
+        .goal-card-arrow i {
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .goal-cards-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .goal-cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Goal Box Styling - Enhanced */
+        .goal-box {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--primary-blue) 50%, var(--navy-dark) 100%);
+            color: var(--white);
+            padding: 40px;
+            border-radius: 24px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(13, 23, 82, 0.4);
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .goal-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(ellipse, rgba(23, 202, 96, 0.15) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .goal-box::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -30%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(ellipse, rgba(24, 99, 220, 0.2) 0%, transparent 50%);
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        /* Target Icon Container */
+        .goal-target {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .goal-target-rings {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .goal-target-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .goal-target-ring:nth-child(1) {
+            width: 100%;
+            height: 100%;
+            border-color: rgba(255, 255, 255, 0.3);
+            animation: targetPulse 3s ease-in-out infinite;
+        }
+
+        .goal-target-ring:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            border-color: rgba(23, 202, 96, 0.5);
+            animation: targetPulse 3s ease-in-out infinite 0.5s;
+        }
+
+        .goal-target-ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            border-color: var(--primary-green);
+            animation: targetPulse 3s ease-in-out infinite 1s;
+        }
+
+        .goal-target-center {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(23, 202, 96, 0.6);
+            animation: targetGlow 2s ease-in-out infinite, targetBounce 3s ease-in-out infinite;
+        }
+
+        @keyframes targetBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes targetPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+        }
+
+        @keyframes targetGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(23, 202, 96, 0.6); }
+            50% { box-shadow: 0 0 40px rgba(23, 202, 96, 0.9), 0 0 60px rgba(23, 202, 96, 0.4); }
+        }
+
+        .goal-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .goal-box h4 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .goal-box h4::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-green), transparent);
+            margin-left: 15px;
+        }
+
+        .goal-box p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.95;
+            position: relative;
+        }
+
+        .goal-box ul {
+            margin: 20px 0 20px 25px;
+            line-height: 2;
+        }
+
+        .goal-box li {
+            position: relative;
+            padding-left: 10px;
+            padding: 8px 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            animation: fadeInLeft 0.6s ease-out backwards;
+        }
+
+        .goal-box li:nth-child(1) { animation-delay: 0.2s; }
+        .goal-box li:nth-child(2) { animation-delay: 0.4s; }
+        .goal-box li:nth-child(3) { animation-delay: 0.6s; }
+        .goal-box li:nth-child(4) { animation-delay: 0.8s; }
+
+        .goal-box li:hover {
+            background: rgba(23, 202, 96, 0.15);
+            transform: translateX(10px);
+        }
+
+        .goal-box li::marker {
+            color: var(--primary-green);
+        }
+
+        .goal-box .highlight {
+            color: var(--primary-green);
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(23, 202, 96, 0.3);
+            position: relative;
+        }
+
+        .goal-box .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-green);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .goal-box li:hover .highlight::after {
+            transform: scaleX(1);
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Goal Box Mobile */
+        @media (max-width: 768px) {
+            .goal-box {
+                grid-template-columns: 1fr;
+                padding: 25px;
+                text-align: center;
+            }
+            .goal-target {
+                margin: 0 auto 20px;
+                width: 80px;
+                height: 80px;
+            }
+            .goal-box h4 {
+                font-size: 1.3rem;
+                justify-content: center;
+            }
+            .goal-box h4::after {
+                display: none;
+            }
+        }
+
+        /* Section Divider */
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-blue), transparent);
+            border-radius: 2px;
+            margin: 48px 0;
+            opacity: 0.2;
+        }
+
+        /* Core Objectives Header */
+        .objectives-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .objectives-header h3 {
+            margin: 0;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .objectives-header i {
+            font-size: 1.5rem;
+            color: var(--primary-green);
+        }
+
+        /* Objectives Stats - Key metrics display - Enhanced */
+        .objectives-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 20px 0 30px;
+        }
+
+        .obj-stat {
+            text-align: center;
+            padding: 20px 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: statReveal 0.5s ease forwards;
+        }
+
+        .obj-stat:nth-child(1) { animation-delay: 0.1s; }
+        .obj-stat:nth-child(2) { animation-delay: 0.2s; }
+        .obj-stat:nth-child(3) { animation-delay: 0.3s; }
+        .obj-stat:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes statReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Individual stat colors */
+        .obj-stat:nth-child(1) {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #3b82f6 100%);
+            box-shadow: 0 4px 15px rgba(24, 99, 220, 0.25);
+        }
+
+        .obj-stat:nth-child(2) {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #10b981 100%);
+            box-shadow: 0 4px 15px rgba(23, 202, 96, 0.25);
+        }
+
+        .obj-stat:nth-child(3) {
+            background: linear-gradient(135deg, #0D1752 0%, #1a2a6c 100%);
+            box-shadow: 0 4px 15px rgba(13, 23, 82, 0.25);
+        }
+
+        .obj-stat:nth-child(4) {
+            background: linear-gradient(135deg, #2196F3 0%, #1863DC 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.25);
+        }
+
+        /* Animated background effect */
+        .obj-stat::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 50%);
+            animation: statShine 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .obj-stat:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes statShine {
+            0%, 100% { transform: translate(-30%, -30%) rotate(0deg); }
+            50% { transform: translate(30%, 30%) rotate(180deg); }
+        }
+
+        /* Icon for each stat */
+        .obj-stat::after {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+            opacity: 0.4;
+            color: white;
+        }
+
+        .obj-stat:nth-child(1)::after { content: '\f155'; } /* dollar */
+        .obj-stat:nth-child(2)::after { content: '\f017'; } /* clock */
+        .obj-stat:nth-child(3)::after { content: '\f201'; } /* chart */
+        .obj-stat:nth-child(4)::after { content: '\f00c'; } /* check */
+
+        .obj-stat:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .obj-stat:hover::after {
+            opacity: 0.7;
+        }
+
+        .obj-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            position: relative;
+        }
+
+        .obj-stat-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           CFRS PILLAR CARDS - Interactive Risk Components
+           ============================================ */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .pillar-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .pillar-card.pillar-1 { border-color: var(--primary-blue); }
+        .pillar-card.pillar-2 { border-color: var(--primary-green); }
+        .pillar-card.pillar-3 { border-color: #f59e0b; }
+        .pillar-card.pillar-4 { border-color: #8b5cf6; }
+
+        .pillar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pillar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .pillar-weight {
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: var(--white);
+        }
+
+        .pillar-1 .pillar-weight { background: var(--primary-blue); }
+        .pillar-2 .pillar-weight { background: var(--primary-green); }
+        .pillar-3 .pillar-weight { background: #f59e0b; }
+        .pillar-4 .pillar-weight { background: #8b5cf6; }
+
+        .pillar-formula {
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: var(--gray-50);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: var(--gray-600);
+        }
+
+        .adjustments-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .adjustment-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.85rem;
+        }
+
+        .adjustment-item:last-child {
+            border-bottom: none;
+        }
+
+        .adjustment-value {
+            font-weight: 700;
+        }
+
+        .adjustment-value.positive { color: var(--risk-low); }
+        .adjustment-value.negative { color: var(--risk-high); }
+        .adjustment-value.neutral { color: var(--gray-600); }
+
+        /* Score Bands */
+        .score-bands {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .score-band {
+            padding: 25px 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-band::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            transition: opacity 0.3s;
+        }
+
+        .score-band:hover::before {
+            opacity: 0.2;
+        }
+
+        .score-band.band-green {
+            background: linear-gradient(135deg, rgba(23, 202, 96, 0.15), rgba(9, 252, 4, 0.1));
+            border: 2px solid var(--risk-low);
+        }
+
+        .score-band.band-yellow {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+            border: 2px solid var(--risk-moderate);
+        }
+
+        .score-band.band-red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+            border: 2px solid var(--risk-high);
+        }
+
+        .score-band:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .band-range {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .band-green .band-range { color: var(--risk-low); }
+        .band-yellow .band-range { color: var(--risk-moderate); }
+        .band-red .band-range { color: var(--risk-high); }
+
+        .band-action {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .band-risk {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        /* Heatmap Styles */
+        .heatmap-container {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin: 25px 0;
+        }
+
+        .heatmap-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 120px repeat(4, 1fr);
+            gap: 3px;
+        }
+
+        .heatmap-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px 5px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .heatmap-row-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 12px 10px;
+            background: var(--gray-50);
+            display: flex;
+            align-items: center;
+        }
+
+        .heatmap-cell {
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+
+        .heat-high { background: rgba(23, 202, 96, 0.8); color: white; }
+        .heat-medium-high { background: rgba(23, 202, 96, 0.5); color: var(--gray-800); }
+        .heat-medium { background: rgba(234, 179, 8, 0.6); color: var(--gray-800); }
+        .heat-medium-low { background: rgba(249, 115, 22, 0.6); color: white; }
+        .heat-low { background: rgba(239, 68, 68, 0.8); color: white; }
+
+        /* Sample Data Table */
+        .sample-data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .sample-data-table th {
+            background: linear-gradient(135deg, var(--navy-dark), var(--primary-blue));
+            color: white;
+            padding: 15px 12px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sample-data-table td {
+            padding: 12px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .sample-data-table tr:hover {
+            background: rgba(24, 99, 220, 0.05);
+        }
+
+        .risk-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .risk-badge.low { background: rgba(23, 202, 96, 0.2); color: var(--risk-low); }
+        .risk-badge.moderate { background: rgba(234, 179, 8, 0.2); color: #b45309; }
+        .risk-badge.high { background: rgba(239, 68, 68, 0.2); color: var(--risk-high); }
+
+        /* Export Buttons */
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--gray-200);
+            background: var(--white);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        .export-btn i {
+            font-size: 1rem;
+        }
+
+        /* Filter Controls for Risk Model */
+        .risk-filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--gray-50);
+            border-radius: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.85rem;
+            background: var(--white);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* 3D Pie Chart Effect - Isometric Style */
+        .pie-3d-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        .pie-3d-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            animation: pieFloat 4s ease-in-out infinite;
+        }
+
+        .pie-3d-wrapper::before {
+            content: 'CFRS';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            z-index: 10;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Glow effect */
+        .pie-3d-shadow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(ellipse, rgba(24, 99, 220, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pieGlow 3s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes pieFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pieGlow {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.15);
+                opacity: 0.8;
+            }
+        }
+
+        .pie-3d-wrapper canvas {
+            filter: drop-shadow(0 10px 30px rgba(24, 99, 220, 0.3))
+                    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Highlight animation */
+        @keyframes highlight-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(24, 99, 220, 0); }
+            50% { box-shadow: 0 0 0 10px rgba(24, 99, 220, 0.3); }
+        }
+
+        .highlight-on-change {
+            animation: highlight-pulse 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- Fixed Navigation -->
+    <nav class="nav-bar">
+        <a href="#executive" class="nav-link"><i class="fas fa-clipboard-list"></i> Summary</a>
+        <a href="#model" class="nav-link"><i class="fas fa-chart-line"></i> Risk Model</a>
+        <a href="#tiers" class="nav-link"><i class="fas fa-layer-group"></i> Tiers</a>
+        <a href="#fees" class="nav-link"><i class="fas fa-dollar-sign"></i> Fees</a>
+        <a href="#compliance" class="nav-link"><i class="fas fa-map-marked-alt"></i> States</a>
+        <a href="#conversion" class="nav-link"><i class="fas fa-funnel-dollar"></i> Conversion</a>
+        <a href="#projections" class="nav-link"><i class="fas fa-chart-bar"></i> Projections</a>
+        <a href="#kpis" class="nav-link"><i class="fas fa-tachometer-alt"></i> KPIs</a>
+    </nav>
+
+    <div class="container">
+        <header class="hero">
+            <!-- Animated Particles -->
+            <div class="hero-particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+
+            <!-- Geometric Accent Lines -->
+            <div class="hero-accent-lines">
+                <div class="accent-line"></div>
+                <div class="accent-line"></div>
+                <div class="accent-line"></div>
+            </div>
+
+            <!-- Corner Decorations -->
+            <div class="hero-corner top-left"></div>
+            <div class="hero-corner bottom-right"></div>
+
+            <!-- Main Content -->
+            <div class="hero-content">
+                <!-- Logo -->
+                <div class="hero-logo-container">
+                    <img src="https://mybambu.com/wp-content/uploads/2025/03/nuevo-logo-mybambu-blanco.png" alt="MyBambu Logo" class="hero-logo">
+                </div>
+
+                <!-- Title -->
+                <div class="hero-title-container">
+                    <h1 class="hero-title">Micro-Loan <span class="highlight">Risk Model</span></h1>
+                </div>
+
+                <!-- Subtitle -->
+                <p class="hero-subtitle">Pure Cash Flow Analysis Framework for Micro-Lending Products</p>
+
+                <!-- Version Badge -->
+                <div class="hero-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Strategic Risk Assessment Model v1.0</span>
+                </div>
+
+                <!-- Executive Stats -->
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="hero-stat-value">$30-200</div>
+                        <div class="hero-stat-label">Loan Range</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="hero-stat-value">30-90</div>
+                        <div class="hero-stat-label">Days Term</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="hero-stat-value">12-15%</div>
+                        <div class="hero-stat-label">Target Default</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-icon">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <div class="hero-stat-value">21%</div>
+                        <div class="hero-stat-label">Conversion Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scroll Indicator -->
+            <div class="scroll-indicator" onclick="document.getElementById('executive').scrollIntoView({behavior:'smooth'})">
+                <div class="scroll-indicator-inner">
+                    <span>Explore</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================
+             EXECUTIVE SUMMARY SECTION
+
+             PURPOSE: Provide high-level overview of risk model
+             AUDIENCE: Executive stakeholders and decision makers
+
+             DESIGN CHOICES:
+             - Goal box with gradient background for visual hierarchy
+             - Animated checkmarks for engagement and modern feel
+             - Staggered animations for progressive disclosure
+             - Color coding matches brand (green = positive, blue = info)
+             ============================================ -->
+        <section id="executive" class="section">
+            <h2 class="animate-on-scroll">Executive Summary</h2>
+            <p class="description animate-on-scroll">
+                The current model proposes an optimized framework
+                for micro-loans that addresses critical constraints: Pure Cash Flow scoring without credit bureau reporting.
+            </p>
+
+            <!-- Key Metrics -->
+            <div class="objectives-stats animate-on-scroll" style="margin: 30px 0;">
+                <div class="obj-stat">
+                    <div class="obj-stat-value">$200</div>
+                    <div class="obj-stat-label">Max Loan</div>
+                </div>
+                <div class="obj-stat">
+                    <div class="obj-stat-value">30-90</div>
+                    <div class="obj-stat-label">Loan Term (Days)</div>
+                </div>
+                <div class="obj-stat">
+                    <div class="obj-stat-value">12-15%</div>
+                    <div class="obj-stat-label">Target Default</div>
+                </div>
+                <div class="obj-stat">
+                    <div class="obj-stat-value">21%</div>
+                    <div class="obj-stat-label">Conversion Rate</div>
+                </div>
+            </div>
+
+            <!-- Goal & Objectives -->
+            <h3 class="animate-slide-left" style="margin-bottom: 16px; font-size: 1.5rem; color: var(--gray-800);">
+                <i class="fas fa-bullseye" style="color: var(--primary-green); margin-right: 12px;"></i>
+                Our Goal
+            </h3>
+            <p class="description animate-on-scroll" style="margin-bottom: 24px;">
+                Build a simple, scalable, and predictive cash-flow-first risk model for micro-loans based on real cash-flow and transactional behavior, avoiding reliance on external credit bureaus.
+            </p>
+
+            <div class="objectives-list animate-on-scroll" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #1863DC;">
+                    <i class="fas fa-shield-alt" style="color: #1863DC; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">Protect Capital</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Control default rates 12-15%</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #17CA60;">
+                    <i class="fas fa-check-circle" style="color: #17CA60; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">Safe Approvals</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Sustainable approval growth</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #0D1752;">
+                    <i class="fas fa-chart-line" style="color: #0D1752; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">Positive ROI</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Profitable unit economics</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #2196F3;">
+                    <i class="fas fa-brain" style="color: #2196F3; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">Predictive & Data-Driven</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">100% cash flow based scoring</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #1863DC;">
+                    <i class="fas fa-bolt" style="color: #1863DC; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">User Experience</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Frictionless onboarding</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #17CA60;">
+                    <i class="fas fa-expand-arrows-alt" style="color: #17CA60; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong style="color: var(--gray-800);">Scalability</strong>
+                        <div style="font-size: 0.8rem; color: var(--gray-600);">Flexible & adaptable to growth</div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="description animate-on-scroll" style="font-style: italic; color: var(--text-secondary);">
+                The model ensures sustainable default targets for short-term products while enabling early-stage adoption and growth.
+            </p>
+
+        </section>
+
+        <!-- ============================================
+             RISK MODEL SECTION
+
+             METHODOLOGY: Cash Flow Risk Score (CFRS)
+             - 4-pillar weighted scoring system
+             - No external credit bureau data
+             - Based on transactional behavior analysis
+
+             DATA SOURCES:
+             - MyBambu account transaction history
+             - Deposit patterns and frequencies
+             - Balance fluctuations
+             - ACH returns and derogatory events
+             ============================================ -->
+        <section id="model" class="section alt">
+            <h2 class="animate-on-scroll">Cash Flow Risk Score (CFRS)</h2>
+            <p class="description animate-on-scroll">
+                A predictive, data-driven scoring model based 100% on observed cash flow behavior in the MyBambu account. No external credit bureau data required.
+            </p>
+
+            <!-- Score Bands -->
+            <h3 class="animate-slide-left">Score Bands & Actions</h3>
+            <div class="score-bands">
+                <div class="score-band band-green animate-on-scroll">
+                    <div class="band-range">70-100</div>
+                    <div class="band-action">✓ Approved</div>
+                    <div class="band-risk">All Tiers Eligible (Tier 3 at 70+)</div>
+                </div>
+                <div class="score-band band-yellow animate-on-scroll">
+                    <div class="band-range">60-69</div>
+                    <div class="band-action">⚠ Conditional</div>
+                    <div class="band-risk">Tier 1-2 Only (60-64: Tier 1, 65-69: Tier 2)</div>
+                </div>
+                <div class="score-band band-red animate-on-scroll">
+                    <div class="band-range">0-59</div>
+                    <div class="band-action">✗ Deny</div>
+                    <div class="band-risk">Does Not Meet Minimum CFRS 60</div>
+                </div>
+            </div>
+
+            <!-- 4 Indicators Grid -->
+            <h3 class="animate-slide-left">The Four Indicators</h3>
+            <div class="pillars-grid">
+                <!-- ============================================
+                     INDICATOR 1: CASH FLOW AFFORDABILITY (CFA)
+
+                     METHODOLOGY:
+                     - Uses daily income/expenses from last 6 months
+                     - Calculates projected daily balance
+                     - Determines days user can cover loan parcel
+
+                     WEIGHTING:
+                     - Last 90 days: 70% weight
+                     - Last 6 months: 30% weight
+
+                     TIER ADJUSTMENT:
+                     - Compares projected ability vs loan tiers ($50-$200)
+                     - Adjusts score based on max safe tier
+                     ============================================ -->
+                <div class="pillar-card pillar-1 animate-on-scroll">
+                    <div class="pillar-header">
+                        <div class="pillar-title">
+                            <span class="tooltip-trigger">Cash Flow Affordability (CFA)
+                                <span class="tooltip-content">Debt Service Coverage Ratio: Projects if borrower can cover loan payment based on 90-day cash flow analysis. Primary predictor of repayment capacity.</span>
+                            </span>
+                        </div>
+                        <div class="pillar-weight">40%</div>
+                    </div>
+                    <div class="pillar-formula">
+                        DSCR = (AvgDailyIncome - AvgDailyExpenses) × LoanTerm / LoanAmount
+                    </div>
+                    <ul class="adjustments-list">
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">DSCR ≥ 1.5 + Coverage 90+ days
+                                    <span class="tooltip-content">Strong affordability: Projected surplus covers 150%+ of loan. Low default probability (~5%). Eligible for Tier 3 ($200, 90-day term).</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">70-100</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">DSCR 1.2-1.49 + Coverage 60-89 days
+                                    <span class="tooltip-content">Adequate affordability: Projected surplus covers 120-149% of loan. Moderate default risk (~9%). Eligible for Tier 2 ($150, 60-day term).</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">60-69</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">DSCR 1.0-1.19 + Coverage 45-59 days
+                                    <span class="tooltip-content">Marginal affordability: Projected surplus barely covers loan. Higher default risk (~14%). Eligible for Tier 1 ($100, 45-day term) only.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value neutral">50-59</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">DSCR &lt; 1.0 or Coverage &lt;45 days
+                                    <span class="tooltip-content">Insufficient affordability: Cannot reliably cover loan payment. High default probability (&gt;20%). Application denied.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value negative">0-49</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pillar 2: Transaction Velocity -->
+                <div class="pillar-card pillar-2 animate-on-scroll">
+                    <div class="pillar-header">
+                        <div class="pillar-title">
+                            <span class="tooltip-trigger">Transaction Velocity & Consistency
+                                <span class="tooltip-content">Data Reliability Score: Measures account maturity and transaction patterns. More history = better predictions = lower model risk.</span>
+                            </span>
+                        </div>
+                        <div class="pillar-weight">25%</div>
+                    </div>
+                    <div class="pillar-formula">
+                        DataReliability = AccountAge × TransactionFrequency × Consistency
+                    </div>
+                    <ul class="adjustments-list">
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">6+ months + 50+ tx/month + consistent
+                                    <span class="tooltip-content">High data reliability: Mature account with dense, consistent transaction history. Model predictions highly accurate. Supports all tier applications.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">70-100</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">3-6 months + 30-49 tx/month
+                                    <span class="tooltip-content">Moderate data reliability: Established account with sufficient history. Model predictions reasonably accurate. Supports Tier 1-2 applications.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">60-69</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">1-3 months + 15-29 tx/month
+                                    <span class="tooltip-content">Limited data reliability: New account with minimal history. Model predictions less certain. May support Tier 1 with strong other indicators.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value neutral">50-59</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">&lt;1 month or &lt;15 tx/month
+                                    <span class="tooltip-content">Insufficient data: Cannot reliably predict behavior. High model uncertainty. Recommend waiting for more account history.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value negative">0-49</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pillar 3: Deposit Stability -->
+                <div class="pillar-card pillar-3 animate-on-scroll">
+                    <div class="pillar-header">
+                        <div class="pillar-title">
+                            <span class="tooltip-trigger">Deposit / Employment Stability
+                                <span class="tooltip-content">Income Predictability Score: Measures income source quality and stability. Stable income = predictable repayment capacity.</span>
+                            </span>
+                        </div>
+                        <div class="pillar-weight">20%</div>
+                    </div>
+                    <div class="pillar-formula">
+                        IncomeStability = IncomeSource × (1 - CoefficientOfVariation)
+                    </div>
+                    <ul class="adjustments-list">
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">Verified payroll + CV ≤15%
+                                    <span class="tooltip-content">Excellent income stability: Verified employment with low income variance. Coefficient of Variation ≤15% indicates highly predictable cash flow for loan term.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">70-100</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">Regular deposits + CV 15-25%
+                                    <span class="tooltip-content">Good income stability: Consistent deposits (bi-weekly/monthly) with acceptable variance. Income predictable enough for Tier 1-2 loan terms.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">60-69</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">Irregular deposits + CV 25-40%
+                                    <span class="tooltip-content">Moderate income stability: Variable income pattern (gig economy, freelance). Higher uncertainty in projecting repayment capacity. Tier 1 only.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value neutral">50-59</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">No pattern or CV &gt;40%
+                                    <span class="tooltip-content">Poor income stability: No identifiable income pattern or extreme variance. Cannot project future income with confidence. Application denied.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value negative">0-49</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pillar 4: Behavior -->
+                <div class="pillar-card pillar-4 animate-on-scroll">
+                    <div class="pillar-header">
+                        <div class="pillar-title">
+                            <span class="tooltip-trigger">Behavior / Derogatory Transactions
+                                <span class="tooltip-content">Credit Behavior Risk Score: Identifies financial stress signals. Derogatory events are leading indicators of default risk.</span>
+                            </span>
+                        </div>
+                        <div class="pillar-weight">15%</div>
+                    </div>
+                    <div class="pillar-formula">
+                        BehaviorScore = 100 - (DerogEvents × EventSeverityWeight)
+                    </div>
+                    <ul class="adjustments-list">
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">Zero derogatory events (90 days)
+                                    <span class="tooltip-content">Excellent credit behavior: No NSF, ACH returns, overdrafts, or stop payments. Indicates strong financial management and low default risk.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">70-100</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">1 minor event (NSF or overdraft)
+                                    <span class="tooltip-content">Acceptable credit behavior: Single isolated incident. May indicate temporary cash flow issue. Monitor but approvable for all tiers.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value positive">60-69</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">2-3 events or 1 stop payment
+                                    <span class="tooltip-content">Elevated credit risk: Pattern of financial stress emerging. Stop payments indicate intentional non-payment. Limit to Tier 1 only.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value neutral">50-59</span>
+                        </li>
+                        <li class="adjustment-item">
+                            <span>
+                                <span class="tooltip-trigger">4+ events or payday loan activity
+                                    <span class="tooltip-content">High credit risk: Chronic financial distress or debt cycle indicators. Payday loan usage = 3x higher default probability. Application denied.</span>
+                                </span>
+                            </span>
+                            <span class="adjustment-value negative">0-49</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Dynamic Filters -->
+            <div class="risk-filter-controls animate-on-scroll">
+                <div class="filter-group">
+                    <label>User Segment</label>
+                    <select id="filterSegment">
+                        <option value="all">All Users</option>
+                        <option value="new">New Users (0-3 mo)</option>
+                        <option value="established">Established (3-12 mo)</option>
+                        <option value="mature">Mature (12+ mo)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Risk Level</label>
+                    <select id="filterRisk">
+                        <option value="all">All Levels</option>
+                        <option value="low">Low Risk</option>
+                        <option value="moderate">Moderate Risk</option>
+                        <option value="high">High Risk</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Loan Cohort</label>
+                    <select id="filterCohort">
+                        <option value="all">All Cohorts</option>
+                        <option value="tier1">Tier 1 ($100)</option>
+                        <option value="tier2">Tier 2 ($150)</option>
+                        <option value="tier3">Tier 3 ($200)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Main Formula Display -->
+            <div class="formula-box animate-scale">
+                <div class="formula">
+                    CFRS = (Affordability × 0.40) + (Transaction Velocity × 0.25) + (Deposit Stability × 0.20) + (Behavior × 0.15)
+                </div>
+            </div>
+
+            <!-- Daily Cash Flow Projection Chart -->
+            <div class="chart-container animate-on-scroll">
+                <div class="chart-title">
+                    <span class="tooltip-trigger">Daily Cash Flow Projection (CFA Calculation)
+                        <span class="tooltip-content">Shows projected balance over 30 days based on avg daily income minus expenses. Green zone = can cover loan, Red zone = risk of default</span>
+                    </span>
+                </div>
+                <canvas id="cashFlowProjectionChart"></canvas>
+            </div>
+
+            <!-- Indicator Weights Chart -->
+            <div class="chart-container animate-on-scroll">
+                <div class="chart-title" style="text-align: center;">CFRS Indicator Weights</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 50px;">
+                    <div class="pie-3d-container">
+                        <div class="pie-3d-wrapper">
+                            <canvas id="pillarWeightsChart"></canvas>
+                        </div>
+                        <div class="pie-3d-shadow"></div>
+                    </div>
+                    <div id="pillarWeightsLegend"></div>
+                </div>
+            </div>
+
+            <!-- Heatmap -->
+            <div class="heatmap-container animate-on-scroll">
+                <div class="heatmap-title">
+                    <i class="fas fa-th"></i>
+                    Risk Metrics Heatmap - Sample Users
+                </div>
+                <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 15px;">
+                    Score ranges: <span style="color: var(--risk-low);">70-100 (Tier 3)</span> |
+                    <span style="color: var(--risk-moderate);">60-69 (Tier 1-2)</span> |
+                    <span style="color: var(--risk-high);">&lt;60 (Deny)</span>
+                </p>
+                <div class="heatmap-grid">
+                    <div class="heatmap-header"></div>
+                    <div class="heatmap-header">CFA<br><small style="font-weight:400;">DSCR</small></div>
+                    <div class="heatmap-header">Velocity<br><small style="font-weight:400;">Data</small></div>
+                    <div class="heatmap-header">Stability<br><small style="font-weight:400;">CV%</small></div>
+                    <div class="heatmap-header">Behavior<br><small style="font-weight:400;">Derog</small></div>
+
+                    <div class="heatmap-row-label">Tier 3 Profile<br><small style="color: var(--risk-low);">DSCR ≥1.5</small></div>
+                    <div class="heatmap-cell heat-high">85</div>
+                    <div class="heatmap-cell heat-high">78</div>
+                    <div class="heatmap-cell heat-high">75</div>
+                    <div class="heatmap-cell heat-high">92</div>
+
+                    <div class="heatmap-row-label">Tier 3 Eligible<br><small style="color: var(--risk-low);">Payroll + 6mo</small></div>
+                    <div class="heatmap-cell heat-high">72</div>
+                    <div class="heatmap-cell heat-high">80</div>
+                    <div class="heatmap-cell heat-high">82</div>
+                    <div class="heatmap-cell heat-high">70</div>
+
+                    <div class="heatmap-row-label">Tier 2 Profile<br><small style="color: var(--risk-moderate);">DSCR 1.2-1.49</small></div>
+                    <div class="heatmap-cell heat-medium-high">68</div>
+                    <div class="heatmap-cell heat-medium-high">65</div>
+                    <div class="heatmap-cell heat-medium-high">62</div>
+                    <div class="heatmap-cell heat-high">70</div>
+
+                    <div class="heatmap-row-label">Tier 1 Profile<br><small style="color: var(--risk-elevated);">New, DSCR 1.0</small></div>
+                    <div class="heatmap-cell heat-medium-high">62</div>
+                    <div class="heatmap-cell heat-medium">58</div>
+                    <div class="heatmap-cell heat-medium">55</div>
+                    <div class="heatmap-cell heat-medium-high">65</div>
+
+                    <div class="heatmap-row-label">Denied Profile<br><small style="color: var(--risk-high);">DSCR &lt;1.0</small></div>
+                    <div class="heatmap-cell heat-medium-low">45</div>
+                    <div class="heatmap-cell heat-low">35</div>
+                    <div class="heatmap-cell heat-medium-low">42</div>
+                    <div class="heatmap-cell heat-low">30</div>
+                </div>
+            </div>
+
+            <!-- Sample Data Table -->
+            <h3 class="animate-slide-left">Sample User Calculations</h3>
+            <div class="export-controls">
+                <button class="export-btn" onclick="exportToCSV()">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="export-btn" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+            </div>
+
+            <table class="sample-data-table" id="sampleDataTable">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>CFA<br><small style="font-weight:400;">(40%)</small></th>
+                        <th>Velocity<br><small style="font-weight:400;">(25%)</small></th>
+                        <th>Stability<br><small style="font-weight:400;">(20%)</small></th>
+                        <th>Behavior<br><small style="font-weight:400;">(15%)</small></th>
+                        <th>CFRS</th>
+                        <th>Tier</th>
+                        <th>Decision</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>USR-001</td>
+                        <td>85</td>
+                        <td>78</td>
+                        <td>75</td>
+                        <td>92</td>
+                        <td><strong>82</strong></td>
+                        <td><span style="color: #0D1752; font-weight: 700;">Tier 3 ($200)</span></td>
+                        <td style="color: var(--risk-low);">Approved</td>
+                        <td><span class="risk-badge low">DSCR 1.8, Payroll, 0 Derog</span></td>
+                    </tr>
+                    <tr>
+                        <td>USR-002</td>
+                        <td>72</td>
+                        <td>80</td>
+                        <td>82</td>
+                        <td>70</td>
+                        <td><strong>76</strong></td>
+                        <td><span style="color: #0D1752; font-weight: 700;">Tier 3 ($200)</span></td>
+                        <td style="color: var(--risk-low);">Approved</td>
+                        <td><span class="risk-badge low">DSCR 1.5, 8mo Acct, CV 12%</span></td>
+                    </tr>
+                    <tr>
+                        <td>USR-003</td>
+                        <td>68</td>
+                        <td>65</td>
+                        <td>62</td>
+                        <td>70</td>
+                        <td><strong>66</strong></td>
+                        <td><span style="color: #17CA60; font-weight: 700;">Tier 2 ($150)</span></td>
+                        <td style="color: var(--risk-low);">Approved</td>
+                        <td><span class="risk-badge low">DSCR 1.3, 4mo Acct, CV 20%</span></td>
+                    </tr>
+                    <tr>
+                        <td>USR-004</td>
+                        <td>62</td>
+                        <td>58</td>
+                        <td>55</td>
+                        <td>65</td>
+                        <td><strong>60</strong></td>
+                        <td><span style="color: #1863DC; font-weight: 700;">Tier 1 ($100)</span></td>
+                        <td style="color: var(--risk-moderate);">Conditional</td>
+                        <td><span class="risk-badge moderate">DSCR 1.1, 2mo Acct, 1 NSF</span></td>
+                    </tr>
+                    <tr>
+                        <td>USR-005</td>
+                        <td>58</td>
+                        <td>52</td>
+                        <td>48</td>
+                        <td>55</td>
+                        <td><strong>54</strong></td>
+                        <td><span style="color: var(--risk-high); font-weight: 700;">N/A</span></td>
+                        <td style="color: var(--risk-high);">Denied</td>
+                        <td><span class="risk-badge high">DSCR 0.9, 1mo Acct, CV 35%</span></td>
+                    </tr>
+                    <tr>
+                        <td>USR-006</td>
+                        <td>45</td>
+                        <td>35</td>
+                        <td>42</td>
+                        <td>30</td>
+                        <td><strong>40</strong></td>
+                        <td><span style="color: var(--risk-high); font-weight: 700;">N/A</span></td>
+                        <td style="color: var(--risk-high);">Denied</td>
+                        <td><span class="risk-badge high">DSCR 0.7, &lt;1mo, 4 Derog</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Score Distribution Chart -->
+            <div class="grid-2">
+                <div class="chart-container animate-on-scroll">
+                    <div class="chart-title">CFRS Score Distribution</div>
+                    <canvas id="scoreDistributionChart"></canvas>
+                </div>
+                <div class="chart-container animate-on-scroll">
+                    <div class="chart-title">Risk Level Breakdown</div>
+                    <div style="max-width: 250px; margin: 0 auto;">
+                        <canvas id="riskBreakdownChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Structure -->
+        <section id="tiers" class="section">
+            <h2 class="animate-on-scroll">Tier Structure</h2>
+            <p class="description animate-on-scroll">
+                Three tiers with progressively higher limits based on CFA Score.
+                Higher scores unlock larger loan amounts with lower risk profiles.
+            </p>
+
+            <div id="tierGrid" class="animate-on-scroll">
+                <div class="card tier-card t1">
+                    <h4>Tier 1: Starter</h4>
+                    <div class="amount">$100</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 60-64 <span style="color: var(--risk-elevated);">(14% default)</span><br>
+                        <strong>DSCR:</strong> 1.0-1.19<br>
+                        <strong>Min Income:</strong> $400/mo<br>
+                        <strong>APR:</strong> 48%<br>
+                        <strong>Term:</strong> 45 days<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-elevated);">New borrower, marginal affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #1863DC;">Available in:</strong> 23 states (APR ≥48%)
+                    </div>
+                </div>
+                <div class="card tier-card t2">
+                    <h4>Tier 2: Standard</h4>
+                    <div class="amount">$150</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 65-69 <span style="color: var(--risk-moderate);">(9% default)</span><br>
+                        <strong>DSCR:</strong> 1.2-1.49<br>
+                        <strong>Min Income:</strong> $500/mo<br>
+                        <strong>APR:</strong> 36%<br>
+                        <strong>Term:</strong> 60 days<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-moderate);">Proven borrower, adequate affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #17CA60;">Available in:</strong> 39 states (APR ≥36%)
+                    </div>
+                </div>
+                <div class="card tier-card t3">
+                    <h4>Tier 3: Premium</h4>
+                    <div class="amount">$200</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 70+ <span style="color: var(--risk-low);">(5% default)</span><br>
+                        <strong>DSCR:</strong> ≥1.5<br>
+                        <strong>Min Income:</strong> $650/mo<br>
+                        <strong>APR:</strong> 30%<br>
+                        <strong>Term:</strong> 90 days<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-low);">Low risk, strong affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #0D1752;">Available in:</strong> 43 states (APR ≥30%)
+                    </div>
+                </div>
+            </div>
+
+            <h3>Expected Default Rates by Tier</h3>
+            <div class="chart-container">
+                <div class="chart-title">Default Rate Without Bureau Reporting</div>
+                <canvas id="defaultChart"></canvas>
+            </div>
+
+            <div class="alert-box info">
+                <h4>Graduation Timeline</h4>
+                <p style="margin-top:10px;">
+                    <strong>Tier 1 → Tier 2:</strong> 3-4 months ($100 → $150) - 3 loans paid on time<br>
+                    <strong>Tier 2 → Tier 3:</strong> 8-12 months cumulative ($150 → $200)<br>
+                    <strong>Total $100 to $200: 8-12 months</strong>
+                </p>
+            </div>
+        </section>
+
+        <!-- Fee Structure -->
+        <section id="fees" class="section alt">
+            <h2>Fee Structure</h2>
+            <p class="description">
+                Complete breakdown of all fees charged per loan tier.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Amount</th>
+                        <th>App Fee</th>
+                        <th>Origination</th>
+                        <th>Service Fee</th>
+                        <th>APR</th>
+                        <th>Total Fees</th>
+                        <th>Effective Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-left: 4px solid #1863DC;">
+                        <td><strong style="color: #1863DC;">Tier 1 Starter</strong><br><small style="color: var(--gray-600);">CFRS 60-64, DSCR 1.0-1.19</small></td>
+                        <td>$100</td>
+                        <td>$2.50</td>
+                        <td>4% ($4.00)</td>
+                        <td>2.5% ($2.50)</td>
+                        <td>48%</td>
+                        <td>$15.00</td>
+                        <td>15.0%</td>
+                    </tr>
+                    <tr style="border-left: 4px solid #17CA60;">
+                        <td><strong style="color: #17CA60;">Tier 2 Standard</strong><br><small style="color: var(--gray-600);">CFRS 65-69, DSCR 1.2-1.49</small></td>
+                        <td>$150</td>
+                        <td>$3.00</td>
+                        <td>3% ($4.50)</td>
+                        <td>2% ($3.00)</td>
+                        <td>36%</td>
+                        <td>$19.50</td>
+                        <td>13.0%</td>
+                    </tr>
+                    <tr style="border-left: 4px solid #0D1752;">
+                        <td><strong style="color: #0D1752;">Tier 3 Premium</strong><br><small style="color: var(--gray-600);">CFRS 70+, DSCR ≥1.5</small></td>
+                        <td>$200</td>
+                        <td>$3.50</td>
+                        <td>2.5% ($5.00)</td>
+                        <td>1.5% ($3.00)</td>
+                        <td>30%</td>
+                        <td>$26.50</td>
+                        <td>13.3%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Unit Economics by Tier</h3>
+            <div class="chart-container">
+                <div class="chart-title">Profit/Loss Per Loan (100 loans)</div>
+                <canvas id="unitEconChart"></canvas>
+            </div>
+
+            <div class="alert-box critical">
+                <h4>Critical Finding: Unit Economics by Tier</h4>
+                <p style="margin-top:10px;">
+                    <strong style="color: #1863DC;">Tier 1 ($100, CFRS 60-64):</strong> -$2.53/loan | 14% default | DSCR 1.0-1.19<br>
+                    <strong style="color: #17CA60;">Tier 2 ($150, CFRS 65-69):</strong> +$0.70/loan | 9% default | DSCR 1.2-1.49<br>
+                    <strong style="color: #0D1752;">Tier 3 ($200, CFRS 70+):</strong> +$8.48/loan | 5% default | DSCR ≥1.5<br><br>
+                    <em>Tier 1 acquires customers at a loss. Profitability requires graduating to Tier 2-3 where stronger DSCR reduces default losses.</em>
+                </p>
+            </div>
+        </section>
+
+        <!-- State Regulatory Compliance -->
+        <section id="compliance" class="section alt">
+            <h2 class="animate-on-scroll">State Regulatory Compliance</h2>
+            <p class="description animate-on-scroll">
+                APR caps determine tier availability by state. Based on NCLC 2024 data.
+            </p>
+
+            <!-- Market Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+                <div class="card animate-on-scroll" style="background: linear-gradient(135deg, var(--risk-low) 0%, #15b050 100%); color: white; padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 3rem; font-weight: 800;">43</div>
+                            <div style="font-size: 1.1rem; font-weight: 600;">States Addressable</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">~300M population (92% US)</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-users"></i> ~57M Hispanic (19%)
+                            </div>
+                        </div>
+                        <i class="fas fa-map-marker-alt" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <div class="card animate-on-scroll" style="background: linear-gradient(135deg, var(--primary-blue) 0%, #1050b0 100%); color: white; padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 3rem; font-weight: 800;">23</div>
+                            <div style="font-size: 1.1rem; font-weight: 600;">Full Product Access</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">~180M population (55% US)</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.3);">
+                                <i class="fas fa-users"></i> ~38M Hispanic (21%)
+                            </div>
+                        </div>
+                        <i class="fas fa-check-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tier Availability by Category -->
+            <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px;">
+                <h3 style="margin-bottom: 20px; font-size: 1.1rem;">Tier Availability by State Category</h3>
+
+                <!-- Full Access -->
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--gray-200);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                        <div style="background: var(--risk-low); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                            23 STATES
+                        </div>
+                        <div>
+                            <strong style="color: var(--gray-800);">Full Access</strong>
+                            <span style="color: var(--gray-600); font-size: 0.85rem;"> — APR ≥48% — All Tiers</span>
+                        </div>
+                        <div style="margin-left: auto; display: flex; gap: 5px;">
+                            <span style="background: #1863DC; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">T1</span>
+                            <span style="background: #17CA60; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">T2</span>
+                            <span style="background: #0D1752; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">T3</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">TX</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">FL</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">CA</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">OH</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">VA</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">TN</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">IN</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">AL</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">LA</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">CO</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">AZ</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MN</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NE</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">KY</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NM</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">HI</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">OK</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MS</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">DE</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MO</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">ID</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">UT</span>
+                        <span style="background: var(--gray-100); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">WI</span>
+                    </div>
+                </div>
+
+                <!-- Limited -->
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--gray-200);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                        <div style="background: var(--risk-moderate); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                            16 STATES
+                        </div>
+                        <div>
+                            <strong style="color: var(--gray-800);">Limited</strong>
+                            <span style="color: var(--gray-600); font-size: 0.85rem;"> — APR 36-47% — Tier 2-3 Only</span>
+                        </div>
+                        <div style="margin-left: auto; display: flex; gap: 5px;">
+                            <span style="background: #17CA60; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">T2</span>
+                            <span style="background: #0D1752; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">T3</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MI</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">IL</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">WA</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MA</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NV</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">OR</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">CT</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">IA</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">KS</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">WV</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NH</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MT</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">ND</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">SD</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">AK</span>
+                        <span style="background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">WY</span>
+                    </div>
+                </div>
+
+                <!-- Restricted & No Operations -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                            <div style="background: var(--risk-elevated); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                                4 STATES
+                            </div>
+                            <div>
+                                <strong style="color: var(--gray-800);">Restricted</strong>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;"> — T3 Only</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span style="background: #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NJ</span>
+                            <span style="background: #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">MD</span>
+                            <span style="background: #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">RI</span>
+                            <span style="background: #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">ME</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                            <div style="background: var(--risk-high); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                                7 STATES
+                            </div>
+                            <div>
+                                <strong style="color: var(--gray-800);">No Operations</strong>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;"> — &lt;30%</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NY</span>
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">PA</span>
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">NC</span>
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">AR</span>
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">VT</span>
+                            <span style="background: #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;">DC</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategic Impact -->
+            <div class="grid-2">
+                <div class="card animate-on-scroll" style="border-left: 4px solid var(--risk-low);">
+                    <h4 style="color: var(--risk-low); margin-bottom: 10px;"><i class="fas fa-chart-line"></i> Unit Economics by Market</h4>
+                    <div style="font-size: 0.9rem; line-height: 1.8;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                            <span>Full Access (T1-T3)</span>
+                            <strong>$20.33/loan</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                            <span>Limited (T2-T3)</span>
+                            <strong style="color: var(--risk-low);">$23.00/loan</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                            <span>Restricted (T3)</span>
+                            <strong style="color: var(--risk-low);">$26.50/loan</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="card animate-on-scroll" style="border-left: 4px solid var(--primary-blue);">
+                    <h4 style="color: var(--primary-blue); margin-bottom: 10px;"><i class="fas fa-lightbulb"></i> Key Strategic Insight</h4>
+                    <p style="font-size: 0.9rem; color: var(--gray-600); line-height: 1.6;">
+                        <strong>Limited states = Better initial unit economics</strong><br>
+                        No Tier 1 losses (-$2.53/loan), customers start at Tier 2 (+$0.70/loan).<br><br>
+                        <strong>Launch Strategy:</strong> Start in Full Access states (TX, FL, CA, OH) to build T1→T3 pipeline, then expand to Limited states for profitable-from-day-one customers.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conversion Funnel -->
+        <section id="conversion" class="section">
+            <h2>Conversion Funnel Analysis</h2>
+            <p class="description">
+                Complete funnel from app to successful repayment.
+            </p>
+
+            <div class="funnel-step">
+                <span class="step-name">Active Users</span>
+                <span class="step-value">45,213</span>
+                <span class="step-rate">-</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Leads Generated (click Apply)</span>
+                <span class="step-value">1,500</span>
+                <span class="step-rate">15%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Applications Started</span>
+                <span class="step-value">975</span>
+                <span class="step-rate">65%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Application Fee Paid</span>
+                <span class="step-value">634</span>
+                <span class="step-rate">65%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Approved</span>
+                <span class="step-value">456</span>
+                <span class="step-rate">72%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Offer Accepted</span>
+                <span class="step-value">374</span>
+                <span class="step-rate">82%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Loans Disbursed</span>
+                <span class="step-value">366</span>
+                <span class="step-rate">98%</span>
+            </div>
+            <div class="funnel-step">
+                <span class="step-name">Successfully Repaid</span>
+                <span class="step-value">315</span>
+                <span class="step-rate">86%</span>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Conversion Funnel Visualization</div>
+                <canvas id="funnelChart"></canvas>
+            </div>
+
+            <div class="alert-box success">
+                <h4>Overall Conversion: Lead → Repaid = 21%</h4>
+                <p style="margin-top:10px;">
+                    <strong>Approval Distribution by Tier (of 456 approved):</strong><br>
+                    • <span style="color: #1863DC;">Tier 1 (CFRS 60-64):</span> 30% - New borrowers, marginal DSCR<br>
+                    • <span style="color: #17CA60;">Tier 2 (CFRS 65-69):</span> 38% - Adequate DSCR, lower risk<br>
+                    • <span style="color: #0D1752;">Tier 3 (CFRS 70+):</span> 32% - Strong DSCR, lowest risk<br><br>
+                    <strong>Key drop-off points:</strong><br>
+                    • App Start → Fee Paid (35% drop) - Fee is psychological barrier<br>
+                    • Approved → Accepted (18% drop) - Amount too low or fees too high
+                </p>
+            </div>
+        </section>
+
+        <!-- Financial Projections -->
+        <section id="projections" class="section alt">
+            <h2 class="animate-on-scroll">24-Month Financial Projections</h2>
+            <p class="description animate-on-scroll">
+                Conservative projections based on lending revenue and fee structure.
+            </p>
+
+            <!-- Interactive Calculator -->
+            <div class="calculator-container animate-scale">
+                <div class="calculator-title">
+                    <i class="fas fa-calculator"></i>
+                    Scenario Simulator
+                </div>
+                <div class="calculator-grid">
+                    <div class="calc-input-group">
+                        <label>Monthly Loans <span class="range-value" id="loansValue">500</span></label>
+                        <input type="range" id="calcLoans" min="100" max="2000" value="500" step="50">
+                    </div>
+                    <div class="calc-input-group">
+                        <label>Average Loan Amount <span class="range-value" id="amountValue">$100</span></label>
+                        <input type="range" id="calcAmount" min="30" max="200" value="100" step="10">
+                    </div>
+                    <div class="calc-input-group">
+                        <label>Blended Default Rate <span class="range-value" id="defaultValue">10%</span></label>
+                        <input type="range" id="calcDefault" min="5" max="18" value="10" step="1">
+                        <small style="color: var(--gray-600); font-size: 0.7rem;">T1:14% T2:9% T3:5%</small>
+                    </div>
+                    <div class="calc-input-group">
+                        <label>Tier Graduation Rate <span class="range-value" id="graduationValue">60%</span></label>
+                        <input type="range" id="calcGraduation" min="0" max="100" value="60" step="5">
+                        <small style="color: var(--gray-600); font-size: 0.7rem;">T1→T2→T3 progression</small>
+                    </div>
+                </div>
+                <div class="calc-results">
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultVolume">$50K</div>
+                        <div class="calc-result-label">Monthly Volume</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultLosses">-$6.5K</div>
+                        <div class="calc-result-label">Default Losses</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultFeeRevenue">$7.5K</div>
+                        <div class="calc-result-label">Fee Revenue</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultNet">-$3.5K</div>
+                        <div class="calc-result-label">Net Monthly P&L</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultAnnual">-$42K</div>
+                        <div class="calc-result-label">Annual P&L</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-result-value" id="resultStatus">⚠️</div>
+                        <div class="calc-result-label">Status</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <div class="chart-title">Monthly Profit/Loss Trajectory</div>
+                    <canvas id="projectionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Fee Revenue by Tier (Month 24)</div>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+
+            <h3>24-Month Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Loans</th>
+                        <th>Volume</th>
+                        <th>Avg Tier</th>
+                        <th>Fee Revenue</th>
+                        <th>Defaults</th>
+                        <th>Net P&L</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Month 1-6<br><small style="color: var(--gray-600);">Phase 1: TX, FL, CA, OH</small></td>
+                        <td>3,000</td>
+                        <td>$225K</td>
+                        <td>1.1</td>
+                        <td>$34K</td>
+                        <td class="negative">-$32K</td>
+                        <td class="positive">+$2K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 7-12<br><small style="color: var(--gray-600);">Phase 2: All Full Access (23)</small></td>
+                        <td>5,500</td>
+                        <td>$550K</td>
+                        <td>1.6</td>
+                        <td>$83K</td>
+                        <td class="negative">-$55K</td>
+                        <td class="positive">+$28K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 13-18<br><small style="color: var(--gray-600);">Phase 3: +Limited (16)</small></td>
+                        <td>8,000</td>
+                        <td>$1.0M</td>
+                        <td>2.2</td>
+                        <td>$150K</td>
+                        <td class="negative">-$90K</td>
+                        <td class="positive">+$60K</td>
+                    </tr>
+                    <tr>
+                        <td>Month 19-24<br><small style="color: var(--gray-600);">Phase 4: +Restricted (4)</small></td>
+                        <td>11,000</td>
+                        <td>$1.65M</td>
+                        <td>2.6</td>
+                        <td>$248K</td>
+                        <td class="negative">-$132K</td>
+                        <td class="positive">+$116K</td>
+                    </tr>
+                    <tr style="font-weight:700;background:var(--gray-100)">
+                        <td>Total 24 Months<br><small style="color: var(--gray-600);">43 states operational</small></td>
+                        <td>27,500</td>
+                        <td>$3.43M</td>
+                        <td>1.9</td>
+                        <td>$515K</td>
+                        <td class="negative">-$309K</td>
+                        <td class="positive">+$206K</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box info">
+                <h4>Key Insight: Tier Graduation Drives Profitability</h4>
+                <p style="margin-top:10px;">
+                    <strong>Tier Graduation Impact on Default Rate:</strong><br>
+                    • Tier 1 → Tier 2: Default drops 14% → 9% (DSCR improves 1.0 → 1.3)<br>
+                    • Tier 2 → Tier 3: Default drops 9% → 5% (DSCR improves 1.3 → 1.5+)<br><br>
+                    <strong>Target: 60%+ graduation rate by month 12</strong><br>
+                    Average tier progression: 1.1 (M1-6) → 1.6 (M7-12) → 2.2 (M13-18) → 2.6 (M19-24)<br><br>
+                    With strong tier graduation, blended default rate drops from 14% to ~8%, generating
+                    <strong>+$206K profit</strong> over 24 months.
+                </p>
+            </div>
+        </section>
+
+        <!-- KPIs -->
+        <section id="kpis" class="section">
+            <h2 class="animate-on-scroll">Key Performance Indicators</h2>
+            <p class="description animate-on-scroll">
+                Primary metrics to monitor for portfolio health and profitability.
+            </p>
+
+            <h3 class="animate-slide-left">Portfolio Health Metrics</h3>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-elevated)">&lt;18%</div>
+                    <div class="kpi-label">PAR30 Target</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">30+ days past due</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-high)">&lt;10%</div>
+                    <div class="kpi-label">Blended Default</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">T1:14% T2:9% T3:5%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-low)">&gt;75%</div>
+                    <div class="kpi-label">Recovery Rate</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">Collections efficiency</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--blue-accent)">&gt;65%</div>
+                    <div class="kpi-label">Repeat Rate</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">Customer retention</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--primary-green)">&gt;60%</div>
+                    <div class="kpi-label">Tier Graduation</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">T1→T2→T3 path</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color:var(--risk-low)">≥1.3</div>
+                    <div class="kpi-label">Avg DSCR</div>
+                    <div style="font-size: 0.7rem; color: var(--gray-600);">Portfolio affordability</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top:30px">Alert Thresholds</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>Target</th>
+                        <th>Yellow Alert</th>
+                        <th>Red Alert</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PAR30</td>
+                        <td>&lt;18%</td>
+                        <td>18-22%</td>
+                        <td>&gt;22%</td>
+                        <td>Freeze Tier 1 (CFRS 60-64)</td>
+                    </tr>
+                    <tr>
+                        <td>Blended Default</td>
+                        <td>&lt;10%</td>
+                        <td>10-12%</td>
+                        <td>&gt;12%</td>
+                        <td>Raise min CFRS to 65</td>
+                    </tr>
+                    <tr>
+                        <td>Tier 1 Default</td>
+                        <td>&lt;14%</td>
+                        <td>14-18%</td>
+                        <td>&gt;18%</td>
+                        <td>Require DSCR ≥1.15</td>
+                    </tr>
+                    <tr>
+                        <td>Recovery Rate</td>
+                        <td>&gt;75%</td>
+                        <td>70-75%</td>
+                        <td>&lt;70%</td>
+                        <td>Escalate collection</td>
+                    </tr>
+                    <tr>
+                        <td>Avg Portfolio DSCR</td>
+                        <td>≥1.3</td>
+                        <td>1.2-1.3</td>
+                        <td>&lt;1.2</td>
+                        <td>Tighten CFA scoring</td>
+                    </tr>
+                    <tr>
+                        <td>Tier Graduation</td>
+                        <td>&gt;60%</td>
+                        <td>50-60%</td>
+                        <td>&lt;50%</td>
+                        <td>Review graduation criteria</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="section alt">
+            <h2>Final Recommendations</h2>
+
+            <div class="grid-2">
+                <div class="alert-box success">
+                    <h4>DO - Priority Actions</h4>
+                    <ul style="margin:10px 0 0 20px;color:#14532d">
+                        <li>Enforce minimum CFRS 60 (DSCR ≥1.0)</li>
+                        <li>Require DSCR ≥1.5 for Tier 3 ($200)</li>
+                        <li>Focus on tier graduation to improve DSCR</li>
+                        <li>Monitor CV% for income stability</li>
+                        <li>Track derogatory events as leading indicator</li>
+                        <li>Proactive collections at PAR7</li>
+                    </ul>
+                </div>
+                <div class="alert-box critical">
+                    <h4>DON'T - Avoid</h4>
+                    <ul style="margin:10px 0 0 20px;color:#7f1d1d">
+                        <li>Lower CFRS below 60 (DSCR &lt;1.0 = negative cash flow)</li>
+                        <li>Approve Tier 3 with CFRS &lt;70 or DSCR &lt;1.5</li>
+                        <li>Ignore Tier 1 default &gt;14% alerts</li>
+                        <li>Approve accounts &lt;2 months old for Tier 2+</li>
+                        <li>Accept CV &gt;25% without payroll verification</li>
+                        <li>Expect profit without 60%+ tier graduation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box info" style="margin-top:20px">
+                <h4>Financial Model Summary</h4>
+                <p style="margin-top:10px">
+                    <strong>Tier Economics:</strong><br>
+                    • Tier 1 ($100): Loss leader at -$2.53/loan (14% default, DSCR 1.0-1.19)<br>
+                    • Tier 2 ($150): Breakeven at +$0.70/loan (9% default, DSCR 1.2-1.49)<br>
+                    • Tier 3 ($200): Profitable at +$8.48/loan (5% default, DSCR ≥1.5)<br><br>
+                    <strong>24-Month Projection:</strong> +$206K profit with 60%+ tier graduation<br>
+                    <strong>Break-even DSCR:</strong> Portfolio average ≥1.3<br><br>
+                    <strong>Recommendation: APPROVE with tier graduation focus</strong>
+                </p>
+            </div>
+
+            <!-- State Rollout Strategy -->
+            <h3 style="margin-top: 30px;">State Rollout Strategy</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Phase</th>
+                        <th>Timeline</th>
+                        <th>States</th>
+                        <th>Tiers</th>
+                        <th>Strategy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-left: 4px solid var(--risk-low);">
+                        <td><strong style="color: var(--risk-low);">Phase 1</strong></td>
+                        <td>M1-6</td>
+                        <td>TX, FL, CA, OH (4 states)</td>
+                        <td>T1, T2, T3</td>
+                        <td>High volume markets, all tiers available. Build customer base and tier graduation pipeline.</td>
+                    </tr>
+                    <tr style="border-left: 4px solid var(--primary-blue);">
+                        <td><strong style="color: var(--primary-blue);">Phase 2</strong></td>
+                        <td>M7-12</td>
+                        <td>Full Access states (19 remaining)</td>
+                        <td>T1, T2, T3</td>
+                        <td>Expand to all APR ≥48% states. Validate unit economics at scale.</td>
+                    </tr>
+                    <tr style="border-left: 4px solid var(--risk-moderate);">
+                        <td><strong style="color: var(--risk-moderate);">Phase 3</strong></td>
+                        <td>M13-18</td>
+                        <td>Limited states (16 states)</td>
+                        <td>T2, T3</td>
+                        <td>APR 36-47% markets. No Tier 1, so target CFRS 65+ only. Better unit economics from start.</td>
+                    </tr>
+                    <tr style="border-left: 4px solid var(--risk-elevated);">
+                        <td><strong style="color: var(--risk-elevated);">Phase 4</strong></td>
+                        <td>M19-24</td>
+                        <td>Restricted states (4 states)</td>
+                        <td>T3 only</td>
+                        <td>Premium-only markets (RI, MD, NJ, ME). Require CFRS 70+, DSCR ≥1.5. Highest revenue per loan.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert-box success" style="margin-top: 20px;">
+                <h4>Rollout Advantages by Phase</h4>
+                <p style="margin-top:10px; color: #14532d;">
+                    <strong>Phase 1-2 (Full Access):</strong> Build complete funnel T1→T2→T3. Higher initial losses but critical for customer LTV.<br>
+                    <strong>Phase 3 (Limited):</strong> Start at T2 = better initial unit economics (+$0.70 vs -$2.53). Skip loss-leader phase.<br>
+                    <strong>Phase 4 (Restricted):</strong> Premium only = $8.48/loan profit. No acquisition losses. Target established borrowers.
+                </p>
+            </div>
+
+            <div class="alert-box info" style="margin-top: 20px;">
+                <h4><i class="fas fa-users"></i> Mission Alignment: Hispanic Community Focus</h4>
+                <p style="margin-top:10px;">
+                    <strong>Phase 1 states (TX, FL, CA) represent 50% of US Hispanic population</strong> according to the latest census data.<br><br>
+                    <span style="display: inline-block; background: var(--gray-100); padding: 4px 12px; border-radius: 6px; margin: 3px 3px 3px 0; font-weight: 600;">TX: 11.4M (29%)</span>
+                    <span style="display: inline-block; background: var(--gray-100); padding: 4px 12px; border-radius: 6px; margin: 3px 3px 3px 0; font-weight: 600;">CA: 15.6M (39%)</span>
+                    <span style="display: inline-block; background: var(--gray-100); padding: 4px 12px; border-radius: 6px; margin: 3px 3px 3px 0; font-weight: 600;">FL: 5.7M (26%)</span><br><br>
+                    This strategic alignment ensures that our initial rollout directly serves MyBambu's core mission:
+                    <strong style="color: var(--primary-blue);">empowering the Hispanic community in the USA with accessible financial services.</strong><br><br>
+                    <em>Launching in these three states maximizes both market opportunity and mission impact from day one.</em>
+                </p>
+            </div>
+
+            <div style="text-align:center;margin-top:30px">
+                <button class="btn" onclick="window.print()">Print Report</button>
+                <button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="margin-left:10px">Back to Top</button>
+            </div>
+        </section>
+
+        <footer>
+            <img src="https://mybambu.com/wp-content/uploads/2025/03/nuevo-logo-mybambu-blanco.png" alt="MyBambu Logo" class="footer-logo">
+            <p><strong>Risk Model - Complete Analysis</strong></p>
+            <p>Pure Cash Flow Micro-Lending Without Bureau Reporting</p>
+            <p style="margin-top:15px;font-size:0.85rem">
+                Last Updated: <span id="lastUpdated"></span>
+            </p>
+            <img src="https://mybambu.com/wp-content/uploads/2025/02/fdic-image.png" alt="FDIC Insured" class="fdic-badge">
+        </footer>
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set('plugins.datalabels', { display: false });
+
+        // ============================================
+        // SCROLL ANIMATIONS - Intersection Observer
+        // ============================================
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const animationObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    // Add stagger delay for grid items
+                    if (entry.target.classList.contains('stagger-item')) {
+                        const siblings = Array.from(entry.target.parentElement.children);
+                        const idx = siblings.indexOf(entry.target);
+                        entry.target.style.transitionDelay = `${idx * 0.1}s`;
+                    }
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.animate-on-scroll, .animate-slide-left, .animate-slide-right, .animate-scale, .stagger-item').forEach(el => {
+            animationObserver.observe(el);
+        });
+
+        // ============================================
+        // OBJECTIVE CARDS - INTERACTIVE CLICK BEHAVIOR
+        // Design: Click to expand details panel
+        // ============================================
+        const objectiveData = {
+            1: {
+                title: 'Protect Capital and Control Default',
+                description: 'Maintain a Target Default of 12–15% from launch, using hard-stop rules and behavioral monitoring.'
+            },
+            2: {
+                title: 'Maximize Safe Approvals (Sustainable Growth)',
+                description: 'Approve loans to the largest safe population, preserving 21% conversion.'
+            },
+            3: {
+                title: 'Predictive and Data-Driven Decisions',
+                description: 'Base approvals on real cash-flow and transactional behavior, not external credit data.'
+            },
+            4: {
+                title: 'Ensure Positive ROI',
+                description: 'Balance loan volume with expected losses to maintain profitability.'
+            },
+            5: {
+                title: 'User Experience and Speed',
+                description: 'Maintain a frictionless application and approval process, minimizing manual reviews.'
+            },
+            6: {
+                title: 'Scalability and Flexibility',
+                description: 'Easily adjust thresholds and scoring as portfolio data grows or new markets are entered.'
+            }
+        };
+
+        const objectiveCards = document.querySelectorAll('.objective-card');
+        const detailPanel = document.getElementById('objectiveDetail');
+        const detailTitle = document.getElementById('detailTitle');
+        const detailDescription = document.getElementById('detailDescription');
+
+        objectiveCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const objectiveId = card.dataset.objective;
+                const data = objectiveData[objectiveId];
+
+                // Toggle active state
+                const wasActive = card.classList.contains('active');
+
+                // Remove active from all cards
+                objectiveCards.forEach(c => c.classList.remove('active'));
+
+                if (wasActive) {
+                    // Hide panel if clicking same card
+                    detailPanel.classList.remove('show');
+                } else {
+                    // Show panel with new content
+                    card.classList.add('active');
+                    detailTitle.textContent = data.title;
+                    detailDescription.textContent = data.description;
+                    detailPanel.classList.add('show');
+
+                    // Smooth scroll to panel
+                    setTimeout(() => {
+                        detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 100);
+                }
+            });
+        });
+
+        // Animate cards on scroll
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = entry.target.dataset.delay || 0;
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, parseInt(delay));
+                }
+            });
+        }, { threshold: 0.2 });
+
+        objectiveCards.forEach(card => {
+            cardObserver.observe(card);
+        });
+
+        // ============================================
+        // TIER FILTER FUNCTIONALITY
+        // ============================================
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const filterableItems = document.querySelectorAll('.filterable');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+
+                // Update active button
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Filter items
+                filterableItems.forEach(item => {
+                    if (filter === 'all' || item.dataset.tier === filter) {
+                        item.classList.remove('hidden');
+                        item.style.position = 'relative';
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // ============================================
+        // INTERACTIVE CALCULATOR
+        // ============================================
+        const calcLoans = document.getElementById('calcLoans');
+        const calcAmount = document.getElementById('calcAmount');
+        const calcDefault = document.getElementById('calcDefault');
+        const calcGraduation = document.getElementById('calcGraduation');
+
+        function updateCalculator() {
+            const loans = parseInt(calcLoans.value);
+            const amount = parseInt(calcAmount.value);
+            const defaultRate = parseInt(calcDefault.value) / 100;
+            const graduationRate = parseInt(calcGraduation.value) / 100;
+
+            // Update display values
+            document.getElementById('loansValue').textContent = loans;
+            document.getElementById('amountValue').textContent = '$' + amount;
+            document.getElementById('defaultValue').textContent = calcDefault.value + '%';
+            document.getElementById('graduationValue').textContent = calcGraduation.value + '%';
+
+            // Calculate results
+            const monthlyVolume = loans * amount;
+            const defaultLosses = monthlyVolume * defaultRate;
+            // Fee revenue increases with tier graduation (higher tiers = larger loans = more fees)
+            const baseFeeRate = 0.15; // Base 15% fee revenue
+            const graduationBonus = graduationRate * 0.05; // Up to 5% bonus from tier graduation
+            const feeRevenue = monthlyVolume * (baseFeeRate + graduationBonus);
+            const netPL = feeRevenue - defaultLosses;
+            const annualPL = netPL * 12;
+
+            // Update results
+            const resultVolume = document.getElementById('resultVolume');
+            const resultLosses = document.getElementById('resultLosses');
+            const resultFeeRevenueEl = document.getElementById('resultFeeRevenue');
+            const resultNet = document.getElementById('resultNet');
+            const resultAnnual = document.getElementById('resultAnnual');
+            const resultStatus = document.getElementById('resultStatus');
+
+            resultVolume.textContent = '$' + (monthlyVolume / 1000).toFixed(0) + 'K';
+            resultLosses.textContent = '-$' + (defaultLosses / 1000).toFixed(1) + 'K';
+            resultLosses.className = 'calc-result-value negative';
+            resultFeeRevenueEl.textContent = '$' + (feeRevenue / 1000).toFixed(1) + 'K';
+            resultFeeRevenueEl.className = 'calc-result-value positive';
+
+            // Net P&L
+            if (netPL >= 0) {
+                resultNet.textContent = '+$' + (netPL / 1000).toFixed(1) + 'K';
+                resultNet.className = 'calc-result-value positive';
+            } else {
+                resultNet.textContent = '-$' + (Math.abs(netPL) / 1000).toFixed(1) + 'K';
+                resultNet.className = 'calc-result-value negative';
+            }
+
+            // Annual P&L
+            if (annualPL >= 0) {
+                resultAnnual.textContent = '+$' + (annualPL / 1000).toFixed(0) + 'K';
+                resultAnnual.className = 'calc-result-value positive';
+            } else {
+                resultAnnual.textContent = '-$' + (Math.abs(annualPL) / 1000).toFixed(0) + 'K';
+                resultAnnual.className = 'calc-result-value negative';
+            }
+
+            // Status indicator
+            if (annualPL > 50000) {
+                resultStatus.textContent = '🚀 Excellent';
+                resultStatus.className = 'calc-result-value positive';
+            } else if (annualPL > 0) {
+                resultStatus.textContent = '✅ Profitable';
+                resultStatus.className = 'calc-result-value positive';
+            } else if (annualPL > -50000) {
+                resultStatus.textContent = '⚠️ At Risk';
+                resultStatus.className = 'calc-result-value';
+            } else {
+                resultStatus.textContent = '🔴 Critical';
+                resultStatus.className = 'calc-result-value negative';
+            }
+
+            // Add highlight animation
+            document.querySelectorAll('.calc-result-item').forEach(item => {
+                item.classList.add('highlight-on-change');
+                setTimeout(() => item.classList.remove('highlight-on-change'), 500);
+            });
+        }
+
+        // Add event listeners
+        [calcLoans, calcAmount, calcDefault, calcGraduation].forEach(input => {
+            input.addEventListener('input', updateCalculator);
+        });
+
+        // Initialize calculator
+        updateCalculator();
+
+        // ============================================
+        // ACTIVE NAVIGATION STATE
+        // ============================================
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        function updateActiveNav() {
+            const scrollPos = window.scrollY + 100;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + sectionId) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveNav);
+
+        // ============================================
+        // CHARTS
+        // ============================================
+
+        // Pillar Weights Chart (Doughnut)
+        new Chart(document.getElementById('pillarWeightsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['CFA (40%)', 'Velocity (25%)', 'Stability (20%)', 'Behavior (15%)'],
+                datasets: [{
+                    data: [40, 25, 20, 15],
+                    backgroundColor: [
+                        'rgba(24, 99, 220, 0.9)',
+                        'rgba(23, 202, 96, 0.9)',
+                        'rgba(245, 158, 11, 0.9)',
+                        'rgba(139, 92, 246, 0.9)'
+                    ],
+                    borderWidth: 4,
+                    borderColor: '#ffffff',
+                    hoverOffset: 20,
+                    hoverBorderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(13, 23, 82, 0.95)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // Custom legend for pillar weights
+        const legendContainer = document.getElementById('pillarWeightsLegend');
+        if (legendContainer) {
+            legendContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(24, 99, 220, 0.1); border-radius: 10px; border-left: 4px solid #1863DC; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        <div style="width: 20px; height: 20px; background: #1863DC; border-radius: 6px; box-shadow: 0 4px 10px rgba(24, 99, 220, 0.4);"></div>
+                        <span style="font-weight: 600; flex: 1;">CFA (Cash Flow Affordability)</span>
+                        <span style="font-weight: 800; color: #1863DC; font-size: 1.2rem;">40%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(23, 202, 96, 0.1); border-radius: 10px; border-left: 4px solid #17CA60; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        <div style="width: 20px; height: 20px; background: #17CA60; border-radius: 6px; box-shadow: 0 4px 10px rgba(23, 202, 96, 0.4);"></div>
+                        <span style="font-weight: 600; flex: 1;">Transaction Velocity</span>
+                        <span style="font-weight: 800; color: #17CA60; font-size: 1.2rem;">25%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; border-left: 4px solid #f59e0b; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 6px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);"></div>
+                        <span style="font-weight: 600; flex: 1;">Deposit Stability</span>
+                        <span style="font-weight: 800; color: #f59e0b; font-size: 1.2rem;">20%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(139, 92, 246, 0.1); border-radius: 10px; border-left: 4px solid #8b5cf6; transition: all 0.3s ease;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                        <div style="width: 20px; height: 20px; background: #8b5cf6; border-radius: 6px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);"></div>
+                        <span style="font-weight: 600; flex: 1;">Account Behavior</span>
+                        <span style="font-weight: 800; color: #8b5cf6; font-size: 1.2rem;">15%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // CASH FLOW PROJECTION CHART
+        // Shows daily projected balance over 30 days
+        // Based on CFA calculation methodology
+        // ============================================
+        const cfaCtx = document.getElementById('cashFlowProjectionChart');
+        if (cfaCtx) {
+            new Chart(cfaCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `Day ${i + 1}`),
+                    datasets: [
+                        {
+                            label: 'User A (High CFA)',
+                            data: [450, 465, 480, 475, 490, 485, 500, 510, 505, 520, 535, 540, 555, 560, 575, 580, 595, 600, 610, 620, 630, 640, 650, 655, 665, 670, 680, 690, 695, 700],
+                            borderColor: '#17CA60',
+                            backgroundColor: 'rgba(23, 202, 96, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'User C (Mid CFA)',
+                            data: [180, 175, 185, 170, 165, 175, 180, 170, 165, 160, 170, 175, 165, 160, 155, 165, 170, 160, 155, 150, 160, 165, 155, 150, 145, 155, 160, 150, 145, 140],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'User D (Low CFA)',
+                            data: [80, 70, 65, 55, 50, 45, 40, 35, 30, 25, 30, 35, 25, 20, 15, 20, 25, 15, 10, 5, 10, 15, 5, 0, -5, 0, 5, -5, -10, -15],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.raw;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: 0,
+                                    yMax: 0,
+                                    borderColor: '#ef4444',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        content: 'Zero Balance Risk',
+                                        enabled: true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Projected Balance ($)'
+                            },
+                            grid: {
+                                color: function(context) {
+                                    if (context.tick.value === 0) {
+                                        return '#ef4444';
+                                    }
+                                    return 'rgba(0, 0, 0, 0.1)';
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Projection Days'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Score Distribution Chart (Bar)
+        new Chart(document.getElementById('scoreDistributionChart'), {
+            type: 'bar',
+            data: {
+                labels: ['0-49 (Deny)', '50-59 (Deny)', '60-64 (T1)', '65-69 (T2)', '70-100 (T3)'],
+                datasets: [{
+                    label: 'Number of Users',
+                    data: [85, 180, 220, 280, 235],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(249, 115, 22, 0.7)',
+                        '#1863DC',
+                        '#17CA60',
+                        '#0D1752'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Users' }
+                    },
+                    x: {
+                        title: { display: true, text: 'CFRS Score Range → Tier Eligibility' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Risk Breakdown Chart (Pie)
+        new Chart(document.getElementById('riskBreakdownChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Tier 3 (70-100)', 'Tier 2 (65-69)', 'Tier 1 (60-64)', 'Denied (0-59)'],
+                datasets: [{
+                    data: [24, 28, 22, 26],
+                    backgroundColor: ['#0D1752', '#17CA60', '#1863DC', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15 }
+                    },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: v => v + '%'
+                    }
+                }
+            }
+        });
+
+        // Export Functions
+        function exportToCSV() {
+            const table = document.getElementById('sampleDataTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const rowData = [];
+                cols.forEach(col => {
+                    rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+                });
+                csv.push(rowData.join(','));
+            });
+
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'cfrs_sample_data.csv';
+            link.click();
+        }
+
+        function exportToExcel() {
+            const table = document.getElementById('sampleDataTable');
+            const html = table.outerHTML;
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'cfrs_sample_data.xls';
+            link.click();
+        }
+
+        // Default Rate Chart
+        new Chart(document.getElementById('defaultChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Tier 1 (Starter)', 'Tier 2 (Standard)', 'Tier 3 (Premium)', 'Blended'],
+                datasets: [{
+                    label: 'Default Rate %',
+                    data: [14, 9, 5, 10],
+                    backgroundColor: ['#1863DC', '#17CA60', '#0D1752', '#6366f1'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 20, title: { display: true, text: 'Default Rate %' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: v => v + '%'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const tierInfo = {
+                                    0: 'CFRS 60-64 | DSCR 1.0-1.19 | $100 | 45 days',
+                                    1: 'CFRS 65-69 | DSCR 1.2-1.49 | $150 | 60 days',
+                                    2: 'CFRS 70+ | DSCR ≥1.5 | $200 | 90 days',
+                                    3: 'Target: <10% with 60%+ tier graduation'
+                                };
+                                return tierInfo[context[0].dataIndex];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Unit Economics Chart
+        new Chart(document.getElementById('unitEconChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Tier 1 ($100)', 'Tier 2 ($150)', 'Tier 3 ($200)'],
+                datasets: [{
+                    label: 'Profit/Loss per Loan',
+                    data: [-2.53, 0.70, 8.48],
+                    backgroundColor: ['#1863DC', '#17CA60', '#0D1752'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'USD per Loan' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold' },
+                        formatter: v => '$' + v.toFixed(2)
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const info = {
+                                    0: 'CFRS 60-64 | DSCR 1.0-1.19 | 14% default | Loss leader',
+                                    1: 'CFRS 65-69 | DSCR 1.2-1.49 | 9% default | Breakeven',
+                                    2: 'CFRS 70+ | DSCR ≥1.5 | 5% default | Profitable'
+                                };
+                                return info[context[0].dataIndex];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Funnel Chart
+        new Chart(document.getElementById('funnelChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Active Users', 'Leads', 'App Started', 'Fee Paid', 'Approved', 'Accepted', 'Disbursed', 'Repaid'],
+                datasets: [{
+                    label: 'Count',
+                    data: [45213, 1500, 975, 634, 456, 374, 366, 315],
+                    backgroundColor: '#1863DC',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const rates = ['', '15% of users', '65% of leads', '65% start', '72% of paid', '82% of approved', '98% of accepted', '86% of disbursed'];
+                                return rates[context[0].dataIndex];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Projection Chart
+        new Chart(document.getElementById('projectionChart'), {
+            type: 'line',
+            data: {
+                labels: ['M1-6', 'M7-12', 'M13-18', 'M19-24'],
+                datasets: [
+                    {
+                        label: 'Fee Revenue',
+                        data: [34, 83, 150, 248],
+                        borderColor: '#17CA60',
+                        backgroundColor: 'rgba(23, 202, 96, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Default Losses',
+                        data: [-32, -55, -90, -132],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Net P&L',
+                        data: [2, 28, 60, 116],
+                        borderColor: '#1863DC',
+                        borderWidth: 3,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    y: { title: { display: true, text: 'USD (thousands)' } }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            footer: function(context) {
+                                const period = context[0].dataIndex;
+                                const insights = [
+                                    'Launch phase - Building loan portfolio',
+                                    'Growth phase - Tier graduation begins',
+                                    'Breakeven - Higher tiers driving profits',
+                                    'Maturity - Sustainable profitability'
+                                ];
+                                return insights[period];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Revenue Mix Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tier 1 ($100)', 'Tier 2 ($150)', 'Tier 3 ($200)', 'Late Fees'],
+                datasets: [{
+                    data: [65, 110, 165, 30],
+                    backgroundColor: ['#1863DC', '#17CA60', '#0D1752', '#6366f1']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const details = {
+                                    0: '$15 fee per loan | CFRS 60-64 | DSCR 1.0-1.19',
+                                    1: '$19.50 fee per loan | CFRS 65-69 | DSCR 1.2-1.49',
+                                    2: '$26.50 fee per loan | CFRS 70+ | DSCR ≥1.5',
+                                    3: 'Late payment penalties ($5-10)'
+                                };
+                                return details[context[0].dataIndex];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ============================================
+        // SCROLL PROGRESS
+        // ============================================
+        window.addEventListener('scroll', () => {
+            const progress = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            document.getElementById('scrollProgress').style.width = progress + '%';
+        });
+
+        // Timestamp
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+
+        // ============================================
+        // SMOOTH SCROLL FOR NAV LINKS
+        // ============================================
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
