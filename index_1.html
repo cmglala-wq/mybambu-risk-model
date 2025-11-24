@@ -3088,6 +3088,85 @@
                 </div>
             </div>
 
+        </section>
+
+        <!-- Tier Structure -->
+        <section id="tiers" class="section">
+            <h2 class="animate-on-scroll">Tier Structure</h2>
+            <p class="description animate-on-scroll">
+                Three tiers with progressively higher limits based on CFA Score.
+                Higher scores unlock larger loan amounts with lower risk profiles.
+            </p>
+
+            <div id="tierGrid" class="animate-on-scroll">
+                <div class="card tier-card t1">
+                    <h4>Tier 1: Starter</h4>
+                    <div class="amount">$100</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 60-64 <span style="color: var(--risk-elevated);">(14% default)</span><br>
+                        <strong>DSCR:</strong> 1.0-1.19<br>
+                        <strong>Min Income:</strong> $400/mo<br>
+                        <strong>APR:</strong> 48%<br>
+                        <strong>Term:</strong> 30 days<br>
+                        <strong>Biweekly Payment:</strong> $51.98 (2 payments)<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-elevated);">New borrower, marginal affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #1863DC;">Available in:</strong> 23 states (APR ≥48%)
+                    </div>
+                </div>
+                <div class="card tier-card t2">
+                    <h4>Tier 2: Standard</h4>
+                    <div class="amount">$150</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 65-69 <span style="color: var(--risk-moderate);">(9% default)</span><br>
+                        <strong>DSCR:</strong> 1.2-1.49<br>
+                        <strong>Min Income:</strong> $500/mo<br>
+                        <strong>APR:</strong> 36%<br>
+                        <strong>Term:</strong> 60 days<br>
+                        <strong>Biweekly Payment:</strong> $39.72 (4 payments)<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-moderate);">Proven borrower, adequate affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #17CA60;">Available in:</strong> 39 states (APR ≥36%)
+                    </div>
+                </div>
+                <div class="card tier-card t3">
+                    <h4>Tier 3: Premium</h4>
+                    <div class="amount">$200</div>
+                    <div class="details">
+                        <strong>CFRS:</strong> 70+ <span style="color: var(--risk-low);">(5% default)</span><br>
+                        <strong>DSCR:</strong> ≥1.5<br>
+                        <strong>Min Income:</strong> $650/mo<br>
+                        <strong>APR:</strong> 30%<br>
+                        <strong>Term:</strong> 90 days<br>
+                        <strong>Biweekly Payment:</strong> $35.80 (6 payments)<br>
+                        <strong>Profile:</strong> <span style="color: var(--risk-low);">Low risk, strong affordability</span>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
+                        <strong style="color: #0D1752;">Available in:</strong> 43 states (APR ≥30%)
+                    </div>
+                </div>
+            </div>
+
+            <h3>Expected Default Rates by Tier</h3>
+            <div class="chart-container">
+                <div class="chart-title">Default Rate Without Bureau Reporting</div>
+                <canvas id="defaultChart"></canvas>
+            </div>
+
+            <div class="alert-box info">
+                <h4>Graduation Timeline</h4>
+                <p style="margin-top:10px;">
+                    <strong>Tier 1 → Tier 2:</strong> 3-4 months ($100 → $150) - 3 loans paid on time<br>
+                    <strong>Tier 2 → Tier 3:</strong> 8-12 months cumulative ($150 → $200)<br>
+                    <strong>Total $100 to $200: 8-12 months</strong>
+                </p>
+            </div>
+        </section>
+
+        <section id="model" class="section alt">
+
             <!-- Dynamic Filters -->
             <div class="risk-filter-controls animate-on-scroll">
                 <div class="filter-group">
@@ -3293,81 +3372,6 @@
                         <canvas id="riskBreakdownChart"></canvas>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Tier Structure -->
-        <section id="tiers" class="section">
-            <h2 class="animate-on-scroll">Tier Structure</h2>
-            <p class="description animate-on-scroll">
-                Three tiers with progressively higher limits based on CFA Score.
-                Higher scores unlock larger loan amounts with lower risk profiles.
-            </p>
-
-            <div id="tierGrid" class="animate-on-scroll">
-                <div class="card tier-card t1">
-                    <h4>Tier 1: Starter</h4>
-                    <div class="amount">$100</div>
-                    <div class="details">
-                        <strong>CFRS:</strong> 60-64 <span style="color: var(--risk-elevated);">(14% default)</span><br>
-                        <strong>DSCR:</strong> 1.0-1.19<br>
-                        <strong>Min Income:</strong> $400/mo<br>
-                        <strong>APR:</strong> 48%<br>
-                        <strong>Term:</strong> 30 days<br>
-                        <strong>Biweekly Payment:</strong> $51.98 (2 payments)<br>
-                        <strong>Profile:</strong> <span style="color: var(--risk-elevated);">New borrower, marginal affordability</span>
-                    </div>
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
-                        <strong style="color: #1863DC;">Available in:</strong> 23 states (APR ≥48%)
-                    </div>
-                </div>
-                <div class="card tier-card t2">
-                    <h4>Tier 2: Standard</h4>
-                    <div class="amount">$150</div>
-                    <div class="details">
-                        <strong>CFRS:</strong> 65-69 <span style="color: var(--risk-moderate);">(9% default)</span><br>
-                        <strong>DSCR:</strong> 1.2-1.49<br>
-                        <strong>Min Income:</strong> $500/mo<br>
-                        <strong>APR:</strong> 36%<br>
-                        <strong>Term:</strong> 60 days<br>
-                        <strong>Biweekly Payment:</strong> $39.72 (4 payments)<br>
-                        <strong>Profile:</strong> <span style="color: var(--risk-moderate);">Proven borrower, adequate affordability</span>
-                    </div>
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
-                        <strong style="color: #17CA60;">Available in:</strong> 39 states (APR ≥36%)
-                    </div>
-                </div>
-                <div class="card tier-card t3">
-                    <h4>Tier 3: Premium</h4>
-                    <div class="amount">$200</div>
-                    <div class="details">
-                        <strong>CFRS:</strong> 70+ <span style="color: var(--risk-low);">(5% default)</span><br>
-                        <strong>DSCR:</strong> ≥1.5<br>
-                        <strong>Min Income:</strong> $650/mo<br>
-                        <strong>APR:</strong> 30%<br>
-                        <strong>Term:</strong> 90 days<br>
-                        <strong>Biweekly Payment:</strong> $35.80 (6 payments)<br>
-                        <strong>Profile:</strong> <span style="color: var(--risk-low);">Low risk, strong affordability</span>
-                    </div>
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200); font-size: 0.75rem;">
-                        <strong style="color: #0D1752;">Available in:</strong> 43 states (APR ≥30%)
-                    </div>
-                </div>
-            </div>
-
-            <h3>Expected Default Rates by Tier</h3>
-            <div class="chart-container">
-                <div class="chart-title">Default Rate Without Bureau Reporting</div>
-                <canvas id="defaultChart"></canvas>
-            </div>
-
-            <div class="alert-box info">
-                <h4>Graduation Timeline</h4>
-                <p style="margin-top:10px;">
-                    <strong>Tier 1 → Tier 2:</strong> 3-4 months ($100 → $150) - 3 loans paid on time<br>
-                    <strong>Tier 2 → Tier 3:</strong> 8-12 months cumulative ($150 → $200)<br>
-                    <strong>Total $100 to $200: 8-12 months</strong>
-                </p>
             </div>
         </section>
 
