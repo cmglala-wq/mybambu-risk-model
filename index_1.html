@@ -2859,6 +2859,21 @@
 
             <!-- 4 Indicators Grid -->
             <h3 class="animate-slide-left">The Four Indicators</h3>
+
+            <!-- Indicator Weights Chart -->
+            <div class="chart-container animate-on-scroll">
+                <div class="chart-title" style="text-align: center;">CFRS Indicator Weights</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 50px;">
+                    <div class="pie-3d-container">
+                        <div class="pie-3d-wrapper">
+                            <canvas id="pillarWeightsChart"></canvas>
+                        </div>
+                        <div class="pie-3d-shadow"></div>
+                    </div>
+                    <div id="pillarWeightsLegend"></div>
+                </div>
+            </div>
+
             <div class="pillars-grid">
                 <!-- ============================================
                      INDICATOR 1: CASH FLOW AFFORDABILITY (CFA)
@@ -3108,19 +3123,6 @@
             <div class="formula-box animate-scale">
                 <div class="formula">
                     CFRS = (Affordability × 0.40) + (Transaction Velocity × 0.25) + (Deposit Stability × 0.20) + (Behavior × 0.15)
-                </div>
-            </div>
-            <!-- Indicator Weights Chart -->
-            <div class="chart-container animate-on-scroll">
-                <div class="chart-title" style="text-align: center;">CFRS Indicator Weights</div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 50px;">
-                    <div class="pie-3d-container">
-                        <div class="pie-3d-wrapper">
-                            <canvas id="pillarWeightsChart"></canvas>
-                        </div>
-                        <div class="pie-3d-shadow"></div>
-                    </div>
-                    <div id="pillarWeightsLegend"></div>
                 </div>
             </div>
 
