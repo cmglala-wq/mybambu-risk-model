@@ -1,0 +1,20 @@
+{
+  "pct_90": 1.0,
+  "pct_6m": 1.0,
+  "cfa_score": 1.0,
+  "total_days": 180,
+  "biweekly_parcel": 39.72,
+  "max_consecutive_can_pay_90d": 90,
+  "balance_stats": {
+    "avg_balance": 3144.11,
+    "min_balance": 832,
+    "max_balance": 5580,
+    "std_balance": 1352.48
+  },
+  "net_stats": {
+    "avg_daily_net": 26.09,
+    "positive_days_pct": 0.0722
+  },
+  "risk_tier": "Tier 3 (Premium) - CFA 85-100%",
+  "recommendation": "APPROVE - Alta capacidad de pago. Elegible para Tier 3 ($200, 90 d\u00edas)."
+}
