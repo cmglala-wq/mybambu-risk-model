@@ -3123,11 +3123,11 @@
                 </div>
             </div>
 
-            <!-- Daily Cash Flow Projection Chart -->
+            <!-- Daily Net Cash Flow Chart -->
             <div class="chart-container animate-on-scroll">
                 <div class="chart-title">
-                    <span class="tooltip-trigger">Daily Cash Flow Projection (CFA Calculation)
-                        <span class="tooltip-content">Shows projected balance over 30 days based on avg daily income minus expenses. Green zone = can cover loan, Red zone = risk of default</span>
+                    <span class="tooltip-trigger">Daily Net Cash Flow by Tier (Income - Expenses)
+                        <span class="tooltip-content">Shows daily net cash flow (NOT cumulative). Positive bars = income exceeds expenses. Spikes = payday deposits (bi-weekly). Purpose: Project sustainability of loan payments over 30 days.</span>
                     </span>
                 </div>
                 <canvas id="cashFlowProjectionChart"></canvas>
@@ -4618,43 +4618,44 @@
         }
 
         // ============================================
-        // CASH FLOW PROJECTION CHART - REAL DATA
-        // Based on 89,552 MyBambu users average income by tier
-        // Tier 3: $4,111/mo ($137/day) | Tier 2: $3,418/mo ($114/day) | Tier 1: $2,947/mo ($98/day)
+        // DAILY NET CASH FLOW CHART - REAL DATA
+        // Shows daily income - expenses (NOT cumulative)
+        // Purpose: Project how many days users can sustain loan payments
+        // Tier 3: $4,111/mo | Tier 2: $3,418/mo | Tier 1: $2,947/mo
         // ============================================
         const cfaCtx = document.getElementById('cashFlowProjectionChart');
         if (cfaCtx) {
             new Chart(cfaCtx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: Array.from({length: 30}, (_, i) => `Day ${i + 1}`),
                     datasets: [
                         {
-                            label: 'Tier 3 Avg ($4,111/mo, $200 loan)',
-                            data: [300, 315, 330, 325, 340, 355, 548, 563, 558, 573, 588, 583, 598, 613, 808, 823, 818, 833, 848, 843, 858, 873, 868, 883, 898, 893, 908, 923, 918, 933],
+                            label: 'Tier 3: Daily Net ($4,111/mo, $200 loan)',
+                            data: [-112, -108, -115, -110, -105, -118, 842, -110, -115, -108, -112, -105, -118, 835, -115, -110, -108, -112, -105, -115, 828, -118, -110, -108, -115, -112, -105, 821, -118, -110],
+                            backgroundColor: function(context) {
+                                return context.parsed.y > 0 ? 'rgba(13, 23, 82, 0.7)' : 'rgba(220, 53, 69, 0.3)';
+                            },
                             borderColor: '#0D1752',
-                            backgroundColor: 'rgba(13, 23, 82, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
+                            borderWidth: 2
                         },
                         {
-                            label: 'Tier 2 Avg ($3,418/mo, $150 loan)',
-                            data: [200, 210, 220, 215, 225, 235, 395, 405, 400, 410, 420, 415, 425, 435, 595, 605, 600, 610, 620, 615, 625, 635, 630, 640, 650, 645, 655, 665, 660, 670],
+                            label: 'Tier 2: Daily Net ($3,418/mo, $150 loan)',
+                            data: [-98, -92, -95, -90, -88, -96, 710, -95, -92, -98, -90, -88, -96, 705, -95, -92, -98, -90, -88, -96, 700, -95, -92, -98, -90, -88, -96, 695, -95, -92],
+                            backgroundColor: function(context) {
+                                return context.parsed.y > 0 ? 'rgba(23, 202, 96, 0.7)' : 'rgba(220, 53, 69, 0.3)';
+                            },
                             borderColor: '#17CA60',
-                            backgroundColor: 'rgba(23, 202, 96, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
+                            borderWidth: 2
                         },
                         {
-                            label: 'Tier 1 Avg ($2,947/mo, $100 loan)',
-                            data: [150, 155, 160, 158, 163, 168, 298, 303, 301, 306, 311, 309, 314, 319, 449, 454, 452, 457, 462, 460, 465, 470, 468, 473, 478, 476, 481, 486, 484, 489],
+                            label: 'Tier 1: Daily Net ($2,947/mo, $100 loan)',
+                            data: [-88, -82, -85, -80, -78, -86, 598, -85, -82, -88, -80, -78, -86, 592, -85, -82, -88, -80, -78, -86, 585, -85, -82, -88, -80, -78, -86, 580, -85, -82],
+                            backgroundColor: function(context) {
+                                return context.parsed.y > 0 ? 'rgba(24, 99, 220, 0.7)' : 'rgba(220, 53, 69, 0.3)';
+                            },
                             borderColor: '#1863DC',
-                            backgroundColor: 'rgba(24, 99, 220, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
+                            borderWidth: 2
                         }
                     ]
                 },
@@ -4692,7 +4693,7 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Projected Balance ($)'
+                                text: 'Daily Net Cash Flow (Income - Expenses)'
                             },
                             grid: {
                                 color: function(context) {
@@ -4706,7 +4707,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Projection Days'
+                                text: 'Days (30-day projection)'
                             }
                         }
                     }
