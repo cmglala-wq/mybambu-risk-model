@@ -3466,6 +3466,26 @@
                 </p>
             </div>
 
+            <!-- ⚠️ PENDING RECALCULATION NOTICE -->
+            <div class="animate-on-scroll" style="max-width: 900px; margin: 0 auto 32px; padding: 20px 24px; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 12px; border-left: 5px solid #FF9800; box-shadow: 0 4px 12px rgba(255,152,0,0.2);">
+                <div style="display: flex; align-items: start; gap: 16px;">
+                    <div style="width: 40px; height: 40px; background: #FF9800; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-exclamation-triangle" style="color: white; font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0 0 8px 0; color: #856404; font-size: 1rem; font-weight: 600;">⚠️ PENDING RECALCULATION WITH NEW CFA THRESHOLDS</h4>
+                        <p style="margin: 0 0 8px 0; color: #856404; font-size: 0.9rem; line-height: 1.5;">
+                            The numbers below reflect <strong>OLD thresholds</strong> (Tier 3 ≥85%, Tier 2 70-84%, Tier 1 55-69%).
+                            With the <strong>NEW inclusive thresholds</strong> (Tier 3 ≥70%, Tier 2 60-69%, Tier 1 50-59%),
+                            we expect significantly higher approval rates and more users qualifying for loans.
+                        </p>
+                        <p style="margin: 0; color: #856404; font-size: 0.85rem; font-style: italic;">
+                            📊 Run the Snowflake query (cfa_snowflake_query.sql) to get updated metrics with the new CFA model.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Key Metrics Cards -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
                 <div class="animate-on-scroll" style="background: linear-gradient(135deg, #1863DC 0%, #0D1752 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(24,99,220,0.3);">
@@ -3499,7 +3519,7 @@
                             <th style="padding: 16px; text-align: left; font-weight: 600;">Tier</th>
                             <th style="padding: 16px; text-align: center; font-weight: 600;">Users</th>
                             <th style="padding: 16px; text-align: center; font-weight: 600;">%</th>
-                            <th style="padding: 16px; text-align: center; font-weight: 600;">Avg CFRS</th>
+                            <th style="padding: 16px; text-align: center; font-weight: 600;">Avg CFA Score</th>
                             <th style="padding: 16px; text-align: center; font-weight: 600;">Loan Capacity</th>
                             <th style="padding: 16px; text-align: center; font-weight: 600;">Avg Monthly Income</th>
                         </tr>
@@ -3640,11 +3660,11 @@
                     <div>
                         <h4 style="margin: 0 0 12px 0; color: var(--gray-800); font-size: 1.2rem;">Strategic Position</h4>
                         <p style="margin: 0; color: var(--gray-700); line-height: 1.6;">
-                            The CFRS model demonstrates strong risk management with a conservative 16.93% approval rate.
-                            With 15,159 eligible users representing $2.5M in loan capacity, we have a solid foundation
-                            for controlled growth. The clear correlation between CFRS scores and income levels validates
-                            the model's predictive power, while Tier 2's size presents an opportunity for user graduation
-                            and increased profitability over time.
+                            The <strong>Cash Flow Affordability (CFA)</strong> model demonstrates strong risk management with daily payment capacity analysis.
+                            With the new <strong>inclusive thresholds</strong> (Tier 3 ≥70%, Tier 2 60-69%, Tier 1 50-59%), we expect
+                            significantly higher approval rates while maintaining credit quality. The clear correlation between CFA scores and income levels
+                            validates the model's predictive power, while the tiered structure presents opportunities for user graduation
+                            and increased profitability over time. <em>Numbers above reflect old thresholds and require recalculation.</em>
                         </p>
                     </div>
                 </div>
