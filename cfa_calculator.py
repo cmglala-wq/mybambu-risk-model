@@ -157,22 +157,22 @@ class CFACalculator:
 
     def _determine_risk_tier(self, cfa_score: float) -> str:
         """Determina el tier de riesgo basado en CFA score."""
-        if cfa_score >= 0.85:
-            return "Tier 3 (Premium) - CFA 85-100%"
-        elif cfa_score >= 0.70:
-            return "Tier 2 (Standard) - CFA 70-84%"
-        elif cfa_score >= 0.55:
-            return "Tier 1 (Starter) - CFA 55-69%"
+        if cfa_score >= 0.70:
+            return "Tier 3 (Premium) - CFA 70-100%"
+        elif cfa_score >= 0.60:
+            return "Tier 2 (Standard) - CFA 60-69%"
+        elif cfa_score >= 0.50:
+            return "Tier 1 (Starter) - CFA 50-59%"
         else:
-            return "Denied - CFA <55%"
+            return "Denied - CFA <50%"
 
     def _get_recommendation(self, cfa_score: float) -> str:
         """Genera recomendación de underwriting basada en CFA."""
-        if cfa_score >= 0.85:
+        if cfa_score >= 0.70:
             return "APPROVE - Alta capacidad de pago. Elegible para Tier 3 ($200, 90 días)."
-        elif cfa_score >= 0.70:
+        elif cfa_score >= 0.60:
             return "APPROVE - Buena capacidad de pago. Elegible para Tier 2 ($150, 60 días)."
-        elif cfa_score >= 0.55:
+        elif cfa_score >= 0.50:
             return "CONDITIONAL - Capacidad marginal. Solo Tier 1 ($100, 30 días)."
         else:
             return "DENY - Capacidad insuficiente. Balance no puede cubrir parcels consistentemente."
@@ -370,28 +370,28 @@ def get_underwriting_rules() -> Dict:
     """
     return {
         'tier_3': {
-            'cfa_min': 0.85,
+            'cfa_min': 0.70,
             'loan_amount': 200,
             'term_days': 90,
             'biweekly_parcel': 35.80,
             'description': 'Premium - Alta capacidad de pago consistente'
         },
         'tier_2': {
-            'cfa_min': 0.70,
+            'cfa_min': 0.60,
             'loan_amount': 150,
             'term_days': 60,
             'biweekly_parcel': 39.72,
             'description': 'Standard - Buena capacidad de pago'
         },
         'tier_1': {
-            'cfa_min': 0.55,
+            'cfa_min': 0.50,
             'loan_amount': 100,
             'term_days': 30,
             'biweekly_parcel': 51.98,
             'description': 'Starter - Capacidad marginal de pago'
         },
         'deny': {
-            'cfa_max': 0.55,
+            'cfa_max': 0.50,
             'description': 'Balance insuficiente para cubrir parcels consistentemente'
         }
     }
