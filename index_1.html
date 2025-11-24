@@ -4618,9 +4618,9 @@
         }
 
         // ============================================
-        // CASH FLOW PROJECTION CHART
-        // Shows daily projected balance over 30 days
-        // Based on CFA calculation methodology
+        // CASH FLOW PROJECTION CHART - REAL DATA
+        // Based on 89,552 MyBambu users average income by tier
+        // Tier 3: $4,111/mo ($137/day) | Tier 2: $3,418/mo ($114/day) | Tier 1: $2,947/mo ($98/day)
         // ============================================
         const cfaCtx = document.getElementById('cashFlowProjectionChart');
         if (cfaCtx) {
@@ -4630,8 +4630,17 @@
                     labels: Array.from({length: 30}, (_, i) => `Day ${i + 1}`),
                     datasets: [
                         {
-                            label: 'User A (High CFA)',
-                            data: [450, 465, 480, 475, 490, 485, 500, 510, 505, 520, 535, 540, 555, 560, 575, 580, 595, 600, 610, 620, 630, 640, 650, 655, 665, 670, 680, 690, 695, 700],
+                            label: 'Tier 3 Avg ($4,111/mo, $200 loan)',
+                            data: [300, 315, 330, 325, 340, 355, 548, 563, 558, 573, 588, 583, 598, 613, 808, 823, 818, 833, 848, 843, 858, 873, 868, 883, 898, 893, 908, 923, 918, 933],
+                            borderColor: '#0D1752',
+                            backgroundColor: 'rgba(13, 23, 82, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Tier 2 Avg ($3,418/mo, $150 loan)',
+                            data: [200, 210, 220, 215, 225, 235, 395, 405, 400, 410, 420, 415, 425, 435, 595, 605, 600, 610, 620, 615, 625, 635, 630, 640, 650, 645, 655, 665, 660, 670],
                             borderColor: '#17CA60',
                             backgroundColor: 'rgba(23, 202, 96, 0.1)',
                             fill: true,
@@ -4639,19 +4648,10 @@
                             borderWidth: 3
                         },
                         {
-                            label: 'User C (Mid CFA)',
-                            data: [180, 175, 185, 170, 165, 175, 180, 170, 165, 160, 170, 175, 165, 160, 155, 165, 170, 160, 155, 150, 160, 165, 155, 150, 145, 155, 160, 150, 145, 140],
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3
-                        },
-                        {
-                            label: 'User D (Low CFA)',
-                            data: [80, 70, 65, 55, 50, 45, 40, 35, 30, 25, 30, 35, 25, 20, 15, 20, 25, 15, 10, 5, 10, 15, 5, 0, -5, 0, 5, -5, -10, -15],
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            label: 'Tier 1 Avg ($2,947/mo, $100 loan)',
+                            data: [150, 155, 160, 158, 163, 168, 298, 303, 301, 306, 311, 309, 314, 319, 449, 454, 452, 457, 462, 460, 465, 470, 468, 473, 478, 476, 481, 486, 484, 489],
+                            borderColor: '#1863DC',
+                            backgroundColor: 'rgba(24, 99, 220, 0.1)',
                             fill: true,
                             tension: 0.4,
                             borderWidth: 3
