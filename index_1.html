@@ -3136,6 +3136,166 @@
                 <canvas id="cashFlowProjectionChart"></canvas>
             </div>
 
+            <!-- CFA Metric Deep Dive -->
+            <h3 class="animate-slide-left" style="margin-top: 60px;">Cash Flow Affordability (CFA) - Detailed Analysis</h3>
+            <div class="animate-on-scroll" style="max-width: 900px; margin: 0 auto 30px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border-left: 4px solid var(--primary-blue);">
+                <p style="margin: 0 0 15px 0; font-size: 1rem; line-height: 1.6;">
+                    <strong>Objetivo:</strong> Medir la capacidad de pago del usuario a nivel diario, basada en su habilidad para cubrir el <strong>biweekly parcel</strong> en cualquier día del periodo de análisis (6 meses).
+                </p>
+                <p style="margin: 0; font-size: 0.95rem; line-height: 1.6; color: var(--gray-700);">
+                    <i class="fas fa-calculator" style="color: var(--primary-blue);"></i> <strong>Metodología:</strong>
+                    Para cada día, evaluamos: <code>can_pay[d] = 1 if daily_balance[d] ≥ biweekly_parcel else 0</code>.
+                    Luego calculamos: <code>CFA = (pct_90 × 0.70) + (pct_6m × 0.30)</code>
+                </p>
+            </div>
+
+            <!-- CFA Temporal Analysis Visualization -->
+            <div class="chart-container animate-on-scroll">
+                <div class="chart-title">CFA Temporal Analysis (90-Day Window)</div>
+                <p class="description" style="margin-bottom: 20px;">
+                    Análisis de 3 paneles: Balance vs. Parcel, Capacidad de Pago Diaria, Rolling CFA Score
+                </p>
+                <div style="text-align: center; background: white; padding: 20px; border-radius: 10px;">
+                    <img src="cfa_temporal_analysis.png" alt="CFA Temporal Analysis" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+
+            <!-- CFA Metrics Table -->
+            <div class="animate-on-scroll" style="max-width: 800px; margin: 40px auto;">
+                <h4 style="text-align: center; margin-bottom: 20px; color: var(--primary-blue);">
+                    <i class="fas fa-table"></i> CFA Metrics - Example User (Tier 2)
+                </h4>
+                <table style="width: 100%; border-collapse: collapse; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #0D1752 0%, #1863DC 100%); color: white;">
+                            <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Métrica</th>
+                            <th style="padding: 15px; text-align: right; border-bottom: 2px solid white;">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background: white;">
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Biweekly Parcel</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace;">$39.72</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Total Days Analyzed</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace;">180</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef; background: #e8f5e9;">
+                            <td style="padding: 12px;"><strong>Can Pay (Last 90 days)</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace; color: #17CA60; font-weight: bold;">100.00%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef; background: #e8f5e9;">
+                            <td style="padding: 12px;"><strong>Can Pay (6 months)</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace; color: #17CA60; font-weight: bold;">100.00%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef; background: #e3f2fd;">
+                            <td style="padding: 12px;"><strong>CFA Score (Weighted)</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 1.2rem; color: #0D1752; font-weight: bold;">100.00%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Risk Tier</strong></td>
+                            <td style="padding: 12px; text-align: right; color: #17CA60; font-weight: bold;">Tier 3 (Premium)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Avg Balance</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace;">$3,144.11</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Min Balance</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace;">$832.00</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;"><strong>Max Consecutive Days</strong></td>
+                            <td style="padding: 12px; text-align: right; font-family: monospace;">90 días</td>
+                        </tr>
+                        <tr style="background: #e8f5e9;">
+                            <td style="padding: 12px;"><strong>Recommendation</strong></td>
+                            <td style="padding: 12px; text-align: right; color: #17CA60; font-weight: bold;">✓ APPROVE - Tier 3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CFA Decision Rules -->
+            <div class="animate-on-scroll" style="max-width: 1000px; margin: 40px auto;">
+                <h4 style="text-align: center; margin-bottom: 20px; color: var(--primary-blue);">
+                    <i class="fas fa-gavel"></i> CFA Decision Rules for Underwriting
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px;">
+                    <!-- Tier 3 -->
+                    <div class="card" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #17CA60; padding: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 1.1rem;">
+                            <i class="fas fa-star"></i> Tier 3: Premium
+                        </h5>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>CFA:</strong> ≥85%</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Loan:</strong> $200</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Parcel:</strong> $35.80</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Term:</strong> 90 días</p>
+                        <p style="margin: 10px 0 0 0; padding-top: 10px; border-top: 1px solid #a5d6a7; color: #2e7d32; font-weight: bold;">
+                            ✓ APPROVE
+                        </p>
+                    </div>
+
+                    <!-- Tier 2 -->
+                    <div class="card" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #1863DC; padding: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #1565c0; font-size: 1.1rem;">
+                            <i class="fas fa-check-circle"></i> Tier 2: Standard
+                        </h5>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>CFA:</strong> 70-84%</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Loan:</strong> $150</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Parcel:</strong> $39.72</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Term:</strong> 60 días</p>
+                        <p style="margin: 10px 0 0 0; padding-top: 10px; border-top: 1px solid #90caf9; color: #1565c0; font-weight: bold;">
+                            ✓ APPROVE
+                        </p>
+                    </div>
+
+                    <!-- Tier 1 -->
+                    <div class="card" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #ff9800; padding: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #e65100; font-size: 1.1rem;">
+                            <i class="fas fa-exclamation-circle"></i> Tier 1: Starter
+                        </h5>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>CFA:</strong> 55-69%</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Loan:</strong> $100</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Parcel:</strong> $51.98</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Term:</strong> 30 días</p>
+                        <p style="margin: 10px 0 0 0; padding-top: 10px; border-top: 1px solid #ffcc80; color: #e65100; font-weight: bold;">
+                            ⚠ CONDITIONAL
+                        </p>
+                    </div>
+
+                    <!-- Denied -->
+                    <div class="card" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border-left: 4px solid #dc3545; padding: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #c62828; font-size: 1.1rem;">
+                            <i class="fas fa-times-circle"></i> Denied
+                        </h5>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>CFA:</strong> &lt;55%</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Loan:</strong> N/A</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Parcel:</strong> N/A</p>
+                        <p style="margin: 5px 0; font-size: 0.9rem;"><strong>Term:</strong> N/A</p>
+                        <p style="margin: 10px 0 0 0; padding-top: 10px; border-top: 1px solid #ef9a9a; color: #c62828; font-weight: bold;">
+                            ✗ DENY
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CFA Interpretation Guide -->
+            <div class="alert-box info animate-on-scroll" style="max-width: 900px; margin: 40px auto;">
+                <h4 style="margin-top: 0;"><i class="fas fa-lightbulb"></i> Interpretación del CFA Score</h4>
+                <ul style="margin: 15px 0; line-height: 1.8;">
+                    <li><strong>CFA 85-100%:</strong> Usuario puede pagar el parcel <strong>85+ días de cada 100 días</strong>. Balance consistentemente alto. <span style="color: #17CA60;">Bajo riesgo.</span></li>
+                    <li><strong>CFA 70-84%:</strong> Usuario puede pagar <strong>70-84 días de cada 100 días</strong>. Balance adecuado pero con cierta variabilidad. <span style="color: #1863DC;">Riesgo moderado.</span></li>
+                    <li><strong>CFA 55-69%:</strong> Usuario puede pagar <strong>55-69 días de cada 100 días</strong>. Balance marginal, solo para préstamos pequeños. <span style="color: #ff9800;">Riesgo elevado.</span></li>
+                    <li><strong>CFA &lt;55%:</strong> Usuario puede pagar <strong>menos de 55 días de cada 100 días</strong>. Balance insuficiente. <span style="color: #dc3545;">Riesgo inaceptable.</span></li>
+                </ul>
+                <p style="margin: 15px 0 0 0; padding: 15px; background: rgba(24, 99, 220, 0.1); border-radius: 8px; border-left: 3px solid var(--primary-blue);">
+                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> El CFA pondera 70% los últimos 90 días (comportamiento reciente) y 30% los 6 meses completos (detecta estacionalidad).
+                    Esta métrica es resistente al gaming y proyecta la capacidad de pago futura basada en balance histórico.
+                </p>
+            </div>
+
 
             <!-- Heatmap -->
             <div class="heatmap-container animate-on-scroll">
