@@ -2616,6 +2616,206 @@
         </section>
 
         <!-- ============================================
+             KPIs DASHBOARD SECTION
+             ============================================ -->
+        <section id="kpis" class="section" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+            <h2 class="animate-on-scroll" style="text-align: center; margin-bottom: 12px;">
+                <i class="fas fa-chart-line" style="color: var(--primary-green); margin-right: 12px;"></i>
+                Key Performance Indicators (KPIs)
+            </h2>
+            <p class="description animate-on-scroll" style="text-align: center; margin-bottom: 40px; color: var(--text-secondary);">
+                Measurable metrics to track our goal achievement and model performance
+            </p>
+
+            <!-- KPI Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 32px;">
+
+                <!-- KPI 1: Protect Capital -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #1863DC;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #1863DC; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shield-alt" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">Protect Capital</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Risk Management</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Default Rate Target</span>
+                                <span style="font-weight: bold; color: #1863DC;">12-15%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Recovery Rate</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Track monthly</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Capital at Risk</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Monitor daily</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Safe Approvals -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #17CA60;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #17CA60; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check-circle" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">Safe Approvals</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Growth & Quality</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Approval Rate by Tier</span>
+                                <span style="font-weight: bold; color: #17CA60;">Track by tier</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Growth Rate</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Monthly %</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Approval Quality Score</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">% on-time pay</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Positive ROI -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #0D1752;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #0D1752; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-chart-line" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">Positive ROI</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Unit Economics</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Profit per Loan (Tier 3)</span>
+                                <span style="font-weight: bold; color: #0D1752;">$8.48</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Portfolio ROI</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Track quarterly</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Breakeven Time</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">8-12 months</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Predictive & Data-Driven -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #2196F3;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #2196F3; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-brain" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">Model Performance</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Predictive Analytics</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Model Accuracy</span>
+                                <span style="font-weight: bold; color: #2196F3;">Target >85%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">CFRS Score Range</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">300-850</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Feature Performance</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Review monthly</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 5: User Experience -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #FF9800;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #FF9800; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bolt" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">User Experience</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Conversion & Speed</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Conversion Rate</span>
+                                <span style="font-weight: bold; color: #FF9800;">21% → 25%+</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Time to Approval</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">< 5 min</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Drop-off Rate</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">< 15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 6: Scalability -->
+                <div class="animate-on-scroll" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #9C27B0;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 48px; height: 48px; background: #9C27B0; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-expand-arrows-alt" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--gray-800);">Scalability</h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--gray-600);">Growth Capacity</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Portfolio Size</span>
+                                <span style="font-weight: bold; color: #9C27B0;">Track growth</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">Active Users</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">Monitor daily</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 0.9rem; color: var(--gray-700);">System Capacity</span>
+                                <span style="font-weight: bold; color: var(--gray-600);">< 70% usage</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- KPI Summary Note -->
+            <div class="animate-on-scroll" style="margin-top: 32px; padding: 20px; background: white; border-radius: 12px; border-left: 4px solid var(--primary-green);">
+                <p style="margin: 0; color: var(--gray-700); font-size: 0.95rem;">
+                    <i class="fas fa-info-circle" style="color: var(--primary-green); margin-right: 8px;"></i>
+                    <strong>Note:</strong> These KPIs should be reviewed monthly and adjusted based on portfolio performance and market conditions. Targets may evolve as the model matures and more data becomes available.
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================
              RISK MODEL SECTION
 
              METHODOLOGY: Cash Flow Risk Score (CFRS)
