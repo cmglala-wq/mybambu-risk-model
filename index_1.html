@@ -2878,37 +2878,37 @@
                 <!-- ============================================
                      INDICATOR 1: CASH FLOW AFFORDABILITY (CFA)
 
-                     METHODOLOGY: DAILY NET CASH FLOW (NOT CUMULATIVE)
-                     - Analyzes daily net = daily income - daily expenses
+                     METHODOLOGY: CUMULATIVE DAILY BALANCE (WITH INITIAL BALANCE)
+                     - daily_balance = SUM(ingresos_t - egresos_t) OVER (PARTITION BY user_id ORDER BY tx_date) + balance_inicial
                      - Projects how many days user can sustain loan payments
-                     - No cumulative balance - each day evaluated independently
+                     - Considers cumulative balance including previous day's ending balance
 
                      DATA WINDOW:
                      - Last 90 days: 70% weight (recent behavior)
                      - Last 180 days: 30% weight (trend validation)
 
                      TIER CRITERIA:
-                     - Counts positive net flow days vs. loan term days
-                     - DSCR = Net monthly surplus / Monthly loan payment
-                     - Higher DSCR = more days with positive cash flow
+                     - Counts days with sufficient cumulative balance vs. loan term days
+                     - Balance includes initial balance + running sum of transactions
+                     - Higher balance coverage = more days able to pay
                      ============================================ -->
                 <div class="pillar-card pillar-1 animate-on-scroll">
                     <div class="pillar-header">
                         <div class="pillar-title">
                             <span class="tooltip-trigger">Cash Flow Affordability (CFA)
-                                <span class="tooltip-content">Daily Payment Capacity: Measures % of days user has sufficient balance to cover biweekly parcel. Calculates can_pay for each day (1 if balance ≥ parcel, 0 if not), then weights recent 90 days (70%) + 6-month history (30%).</span>
+                                <span class="tooltip-content">Cumulative Balance Capacity: Measures % of days user has sufficient cumulative balance to cover biweekly parcel. daily_balance = SUM(ingresos - egresos) + balance_inicial. Calculates can_pay for each day (1 if daily_balance ≥ parcel, 0 if not), then weights recent 90 days (70%) + 6-month history (30%).</span>
                             </span>
                         </div>
                         <div class="pillar-weight">40%</div>
                     </div>
                     <div class="pillar-formula">
-                        can_pay[d] = 1 if balance[d] ≥ parcel | CFA = (pct_90 × 0.70) + (pct_6m × 0.30)
+                        daily_balance = Σ(ingresos - egresos) + balance_inicial | can_pay[d] = 1 if daily_balance[d] ≥ parcel | CFA = (pct_90 × 0.70) + (pct_6m × 0.30)
                     </div>
                     <ul class="adjustments-list">
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 70-100% (can pay 70+ days per 100)
-                                    <span class="tooltip-content">Excellent payment capacity: User has sufficient balance to cover parcel 70+ days out of every 100 days. Consistent balance above parcel threshold. Low default (~5%). Tier 3 ($200) eligible.</span>
+                                    <span class="tooltip-content">Excellent payment capacity: User has sufficient cumulative balance (including balance_inicial) to cover parcel 70+ days out of every 100 days. Consistent balance above parcel threshold. Low default (~5%). Tier 3 ($200) eligible.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value positive">70-100</span>
@@ -2916,7 +2916,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 60-69% (can pay 60-69 days per 100)
-                                    <span class="tooltip-content">Good payment capacity: User has sufficient balance 60-69 days out of every 100 days. Balance usually above parcel with some variability. Moderate default (~9%). Tier 2 ($150) eligible.</span>
+                                    <span class="tooltip-content">Good payment capacity: User has sufficient cumulative balance (including balance_inicial) 60-69 days out of every 100 days. Balance usually above parcel with some variability. Moderate default (~9%). Tier 2 ($150) eligible.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value positive">60-69</span>
@@ -2924,7 +2924,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 50-59% (can pay 50-59 days per 100)
-                                    <span class="tooltip-content">Marginal payment capacity: User has sufficient balance 50-59 days out of every 100 days. Balance frequently below parcel threshold. Higher default (~14%). Tier 1 ($100) only.</span>
+                                    <span class="tooltip-content">Marginal payment capacity: User has sufficient cumulative balance (including balance_inicial) 50-59 days out of every 100 days. Balance frequently below parcel threshold. Higher default (~14%). Tier 1 ($100) only.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value neutral">50-59</span>
@@ -2932,7 +2932,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA &lt; 50% (can pay &lt;50 days per 100)
-                                    <span class="tooltip-content">Insufficient payment capacity: User has sufficient balance less than 50 days out of every 100 days. Balance consistently below parcel threshold. High default (>20%). Denied.</span>
+                                    <span class="tooltip-content">Insufficient payment capacity: User has sufficient cumulative balance (including balance_inicial) less than 50 days out of every 100 days. Balance consistently below parcel threshold. High default (>20%). Denied.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value negative">0-49</span>
@@ -3453,34 +3453,34 @@
                 Executive Summary - Current User Base
             </h2>
             <p class="description animate-on-scroll" style="text-align: center; margin-bottom: 16px; color: var(--text-secondary); font-size: 1.1rem;">
-                Real data analysis from <strong style="color: var(--primary-blue);">89,552 MyBambu users</strong>
+                Real data analysis from <strong style="color: var(--primary-blue);">122,412 MyBambu users</strong>
             </p>
             <div class="animate-on-scroll" style="max-width: 800px; margin: 0 auto 40px; padding: 16px 24px; background: linear-gradient(135deg, #f0f7ff 0%, #e8f5e9 100%); border-radius: 12px; border-left: 4px solid var(--primary-green);">
                 <p style="margin: 0 0 8px 0; color: var(--gray-700); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-check-circle" style="color: var(--primary-green);"></i>
-                    <span><strong>Transactions in the last 90 days</strong> — Active user base</span>
+                    <span><strong>Transactions in the last 180 days</strong> — 6 months of transaction history</span>
                 </p>
                 <p style="margin: 0; color: var(--gray-700); font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-check-circle" style="color: var(--primary-green);"></i>
-                    <span><strong>Activity on at least 7 different days</strong> — Sufficient data for accurate scoring</span>
+                    <span><strong>Activity on at least 7 different days</strong> — Sufficient data for accurate CFA scoring</span>
                 </p>
             </div>
 
-            <!-- ⚠️ PENDING RECALCULATION NOTICE -->
-            <div class="animate-on-scroll" style="max-width: 900px; margin: 0 auto 32px; padding: 20px 24px; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 12px; border-left: 5px solid #FF9800; box-shadow: 0 4px 12px rgba(255,152,0,0.2);">
+            <!-- ✅ NEW CFA MODEL SUCCESS BANNER -->
+            <div class="animate-on-scroll" style="max-width: 900px; margin: 0 auto 32px; padding: 20px 24px; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 12px; border-left: 5px solid #17CA60; box-shadow: 0 4px 12px rgba(23,202,96,0.2);">
                 <div style="display: flex; align-items: start; gap: 16px;">
-                    <div style="width: 40px; height: 40px; background: #FF9800; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas fa-exclamation-triangle" style="color: white; font-size: 1.2rem;"></i>
+                    <div style="width: 40px; height: 40px; background: #17CA60; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-check-circle" style="color: white; font-size: 1.2rem;"></i>
                     </div>
                     <div>
-                        <h4 style="margin: 0 0 8px 0; color: #856404; font-size: 1rem; font-weight: 600;">⚠️ PENDING RECALCULATION WITH NEW CFA THRESHOLDS</h4>
-                        <p style="margin: 0 0 8px 0; color: #856404; font-size: 0.9rem; line-height: 1.5;">
-                            The numbers below reflect <strong>OLD thresholds</strong> (Tier 3 ≥85%, Tier 2 70-84%, Tier 1 55-69%).
-                            With the <strong>NEW inclusive thresholds</strong> (Tier 3 ≥70%, Tier 2 60-69%, Tier 1 50-59%),
-                            we expect significantly higher approval rates and more users qualifying for loans.
+                        <h4 style="margin: 0 0 8px 0; color: #155724; font-size: 1rem; font-weight: 600;">✅ NEW CFA MODEL WITH CUMULATIVE BALANCE</h4>
+                        <p style="margin: 0 0 8px 0; color: #155724; font-size: 0.9rem; line-height: 1.5;">
+                            Updated with <strong>Cash Flow Affordability (CFA)</strong> methodology using cumulative daily balance analysis (includes balance_inicial).
+                            New thresholds: <strong>Tier 3 ≥70%</strong>, <strong>Tier 2 60-69%</strong>, <strong>Tier 1 50-59%</strong>.
+                            Results show <strong>+76% more eligible users</strong> and <strong>+79% loan capacity increase</strong> vs. previous model.
                         </p>
-                        <p style="margin: 0; color: #856404; font-size: 0.85rem; font-style: italic;">
-                            📊 Run the Snowflake query (cfa_snowflake_query.sql) to get updated metrics with the new CFA model.
+                        <p style="margin: 0; color: #155724; font-size: 0.85rem; font-style: italic;">
+                            📊 CFA measures % of days user has sufficient cumulative balance (daily_balance = Σ(ingresos - egresos) + balance_inicial) to cover biweekly loan payments (pct_90 × 0.70 + pct_6m × 0.30)
                         </p>
                     </div>
                 </div>
@@ -3489,19 +3489,19 @@
             <!-- Key Metrics Cards -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
                 <div class="animate-on-scroll" style="background: linear-gradient(135deg, #1863DC 0%, #0D1752 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(24,99,220,0.3);">
-                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">89,552</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">122,412</div>
                     <div style="font-size: 0.9rem; opacity: 0.9;">Total Users Analyzed</div>
                 </div>
                 <div class="animate-on-scroll" style="background: linear-gradient(135deg, #17CA60 0%, #12a84e 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(23,202,96,0.3);">
-                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">16.93%</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">21.83%</div>
                     <div style="font-size: 0.9rem; opacity: 0.9;">Approval Rate</div>
                 </div>
                 <div class="animate-on-scroll" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(255,152,0,0.3);">
-                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">$2.5M</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">$4.48M</div>
                     <div style="font-size: 0.9rem; opacity: 0.9;">Total Loan Capacity</div>
                 </div>
                 <div class="animate-on-scroll" style="background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 12px rgba(156,39,176,0.3);">
-                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">15,159</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px;">26,717</div>
                     <div style="font-size: 0.9rem; opacity: 0.9;">Eligible Users</div>
                 </div>
             </div>
