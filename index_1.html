@@ -36,9 +36,9 @@
 
     TIER STRUCTURE:
     ---------------
-    Tier 1: $100, CFA Score 60-74 (Entry-level, protege P&L)
-    Tier 2: $150, CFA Score 75-89 (Cash flow sólido)
-    Tier 3: $200, CFA Score 90-100 (Bajo riesgo, máxima probabilidad de repago)
+    Tier 1: $100, CFRS 50-59, CFA ≥45% (Entry-level, protects P&L)
+    Tier 2: $150, CFRS 60-69, CFA ≥55% (Solid cash flow)
+    Tier 3: $200, CFRS 70+, CFA ≥65% (Low risk, highest repayment probability)
 
     FEE STRUCTURE:
     --------------
@@ -3103,7 +3103,8 @@
                     <h4>Tier 1: Starter</h4>
                     <div class="amount">$100</div>
                     <div class="details">
-                        <strong>CFRS:</strong> 60-64 <span style="color: var(--risk-elevated);">(14% default)</span><br>
+                        <strong>CFRS:</strong> 50-59 <span style="color: var(--risk-elevated);">(12-14% default)</span><br>
+                        <strong>CFA min:</strong> ≥45%<br>
                         <strong>DSCR:</strong> 1.0-1.19<br>
                         <strong>Min Income:</strong> $400/mo<br>
                         <strong>APR:</strong> 48%<br>
@@ -3119,7 +3120,8 @@
                     <h4>Tier 2: Standard</h4>
                     <div class="amount">$150</div>
                     <div class="details">
-                        <strong>CFRS:</strong> 65-69 <span style="color: var(--risk-moderate);">(9% default)</span><br>
+                        <strong>CFRS:</strong> 60-69 <span style="color: var(--risk-moderate);">(8-10% default)</span><br>
+                        <strong>CFA min:</strong> ≥55%<br>
                         <strong>DSCR:</strong> 1.2-1.49<br>
                         <strong>Min Income:</strong> $500/mo<br>
                         <strong>APR:</strong> 36%<br>
@@ -3135,7 +3137,8 @@
                     <h4>Tier 3: Premium</h4>
                     <div class="amount">$200</div>
                     <div class="details">
-                        <strong>CFRS:</strong> 70+ <span style="color: var(--risk-low);">(5% default)</span><br>
+                        <strong>CFRS:</strong> 70+ <span style="color: var(--risk-low);">(4-6% default)</span><br>
+                        <strong>CFA min:</strong> ≥65%<br>
                         <strong>DSCR:</strong> ≥1.5<br>
                         <strong>Min Income:</strong> $650/mo<br>
                         <strong>APR:</strong> 30%<br>
@@ -3397,7 +3400,7 @@
                 </thead>
                 <tbody>
                     <tr style="border-left: 4px solid #1863DC;">
-                        <td><strong style="color: #1863DC;">Tier 1 Starter</strong><br><small style="color: var(--gray-600);">CFRS 60-64, DSCR 1.0-1.19</small></td>
+                        <td><strong style="color: #1863DC;">Tier 1 Starter</strong><br><small style="color: var(--gray-600);">CFRS 50-59, CFA ≥45%, DSCR 1.0-1.19</small></td>
                         <td>$100</td>
                         <td>$2.50</td>
                         <td>4% ($4.00)</td>
@@ -3407,7 +3410,7 @@
                         <td>15.0%</td>
                     </tr>
                     <tr style="border-left: 4px solid #17CA60;">
-                        <td><strong style="color: #17CA60;">Tier 2 Standard</strong><br><small style="color: var(--gray-600);">CFRS 65-69, DSCR 1.2-1.49</small></td>
+                        <td><strong style="color: #17CA60;">Tier 2 Standard</strong><br><small style="color: var(--gray-600);">CFRS 60-69, CFA ≥55%, DSCR 1.2-1.49</small></td>
                         <td>$150</td>
                         <td>$3.00</td>
                         <td>3% ($4.50)</td>
@@ -3417,7 +3420,7 @@
                         <td>13.0%</td>
                     </tr>
                     <tr style="border-left: 4px solid #0D1752;">
-                        <td><strong style="color: #0D1752;">Tier 3 Premium</strong><br><small style="color: var(--gray-600);">CFRS 70+, DSCR ≥1.5</small></td>
+                        <td><strong style="color: #0D1752;">Tier 3 Premium</strong><br><small style="color: var(--gray-600);">CFRS 70+, CFA ≥65%, DSCR ≥1.5</small></td>
                         <td>$200</td>
                         <td>$3.50</td>
                         <td>2.5% ($5.00)</td>
@@ -3438,9 +3441,9 @@
             <div class="alert-box critical">
                 <h4>Critical Finding: Unit Economics by Tier</h4>
                 <p style="margin-top:10px;">
-                    <strong style="color: #1863DC;">Tier 1 ($100, CFRS 60-64):</strong> -$2.53/loan | 14% default | DSCR 1.0-1.19<br>
-                    <strong style="color: #17CA60;">Tier 2 ($150, CFRS 65-69):</strong> +$0.70/loan | 9% default | DSCR 1.2-1.49<br>
-                    <strong style="color: #0D1752;">Tier 3 ($200, CFRS 70+):</strong> +$8.48/loan | 5% default | DSCR ≥1.5<br><br>
+                    <strong style="color: #1863DC;">Tier 1 ($100, CFRS 50-59):</strong> -$2.53/loan | 12-14% default | DSCR 1.0-1.19 | CFA ≥45%<br>
+                    <strong style="color: #17CA60;">Tier 2 ($150, CFRS 60-69):</strong> +$0.70/loan | 8-10% default | DSCR 1.2-1.49 | CFA ≥55%<br>
+                    <strong style="color: #0D1752;">Tier 3 ($200, CFRS 70+):</strong> +$8.48/loan | 4-6% default | DSCR ≥1.5 | CFA ≥65%<br><br>
                     <em>Tier 1 acquires customers at a loss. Profitability requires graduating to Tier 2-3 where stronger DSCR reduces default losses.</em>
                 </p>
             </div>
@@ -3896,13 +3899,13 @@
             </div>
 
             <div class="funnel-step" style="margin-left: 30px; background: linear-gradient(to right, #e8f5e9 0%, #f1f8f4 100%); border-left: 4px solid #17CA60;">
-                <span class="step-name">→ Tier 2 (CFRS 65-69)</span>
+                <span class="step-name">→ Tier 2 (CFRS 60-69)</span>
                 <span class="step-value" style="color: #17CA60;">6,375</span>
                 <span class="step-rate">7.12%</span>
             </div>
 
             <div class="funnel-step" style="margin-left: 30px; background: linear-gradient(to right, #e3f2fd 0%, #f1f7fb 100%); border-left: 4px solid #1863DC;">
-                <span class="step-name">→ Tier 1 (CFRS 60-64)</span>
+                <span class="step-name">→ Tier 1 (CFRS 50-59)</span>
                 <span class="step-value" style="color: #1863DC;">2,068</span>
                 <span class="step-rate">2.31%</span>
             </div>
@@ -4141,7 +4144,7 @@
                         <td>&lt;18%</td>
                         <td>18-22%</td>
                         <td>&gt;22%</td>
-                        <td>Freeze Tier 1 (CFRS 60-64)</td>
+                        <td>Freeze Tier 1 (CFRS 50-59)</td>
                     </tr>
                     <tr>
                         <td>Blended Default</td>
@@ -4879,9 +4882,9 @@
                         callbacks: {
                             afterBody: function(context) {
                                 const tierInfo = {
-                                    0: 'CFRS 60-64 | DSCR 1.0-1.19 | $100 | 45 days',
-                                    1: 'CFRS 65-69 | DSCR 1.2-1.49 | $150 | 60 days',
-                                    2: 'CFRS 70+ | DSCR ≥1.5 | $200 | 90 days',
+                                    0: 'CFRS 50-59 | CFA ≥45% | DSCR 1.0-1.19 | $100 | 30 days',
+                                    1: 'CFRS 60-69 | CFA ≥55% | DSCR 1.2-1.49 | $150 | 60 days',
+                                    2: 'CFRS 70+ | CFA ≥65% | DSCR ≥1.5 | $200 | 90 days',
                                     3: 'Target: <10% with 60%+ tier graduation'
                                 };
                                 return tierInfo[context[0].dataIndex];
@@ -4921,9 +4924,9 @@
                         callbacks: {
                             afterBody: function(context) {
                                 const info = {
-                                    0: 'CFRS 60-64 | DSCR 1.0-1.19 | 14% default | Loss leader',
-                                    1: 'CFRS 65-69 | DSCR 1.2-1.49 | 9% default | Breakeven',
-                                    2: 'CFRS 70+ | DSCR ≥1.5 | 5% default | Profitable'
+                                    0: 'CFRS 50-59 | CFA ≥45% | DSCR 1.0-1.19 | 12-14% default | Loss leader',
+                                    1: 'CFRS 60-69 | CFA ≥55% | DSCR 1.2-1.49 | 8-10% default | Breakeven',
+                                    2: 'CFRS 70+ | CFA ≥65% | DSCR ≥1.5 | 4-6% default | Profitable'
                                 };
                                 return info[context[0].dataIndex];
                             }
@@ -5065,9 +5068,9 @@
                         callbacks: {
                             afterBody: function(context) {
                                 const details = {
-                                    0: '$15 fee per loan | CFRS 60-64 | DSCR 1.0-1.19',
-                                    1: '$19.50 fee per loan | CFRS 65-69 | DSCR 1.2-1.49',
-                                    2: '$26.50 fee per loan | CFRS 70+ | DSCR ≥1.5',
+                                    0: '$15 fee per loan | CFRS 50-59 | CFA ≥45% | DSCR 1.0-1.19',
+                                    1: '$19.50 fee per loan | CFRS 60-69 | CFA ≥55% | DSCR 1.2-1.49',
+                                    2: '$26.50 fee per loan | CFRS 70+ | CFA ≥65% | DSCR ≥1.5',
                                     3: 'Late payment penalties ($5-10)'
                                 };
                                 return details[context[0].dataIndex];
