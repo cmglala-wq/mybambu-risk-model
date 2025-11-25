@@ -2879,7 +2879,7 @@
                      INDICATOR 1: CASH FLOW AFFORDABILITY (CFA)
 
                      METHODOLOGY: CUMULATIVE DAILY BALANCE (WITH INITIAL BALANCE)
-                     - daily_balance = SUM(ingresos_t - egresos_t) OVER (PARTITION BY user_id ORDER BY tx_date) + balance_inicial
+                     - daily_balance = SUM(income_t - expenses_t) OVER (PARTITION BY user_id ORDER BY tx_date) + initial_balance
                      - Projects how many days user can sustain loan payments
                      - Considers cumulative balance including previous day's ending balance
 
@@ -2896,19 +2896,19 @@
                     <div class="pillar-header">
                         <div class="pillar-title">
                             <span class="tooltip-trigger">Cash Flow Affordability (CFA)
-                                <span class="tooltip-content">Cumulative Balance Capacity: Measures % of days user has sufficient cumulative balance to cover biweekly parcel. daily_balance = SUM(ingresos - egresos) + balance_inicial. Calculates can_pay for each day (1 if daily_balance ≥ parcel, 0 if not), then weights recent 90 days (70%) + 6-month history (30%).</span>
+                                <span class="tooltip-content">Cumulative Balance Capacity: Measures % of days user has sufficient cumulative balance to cover biweekly parcel. daily_balance = SUM(income - expenses) + initial_balance. Calculates can_pay for each day (1 if daily_balance ≥ parcel, 0 if not), then weights recent 90 days (70%) + 6-month history (30%).</span>
                             </span>
                         </div>
                         <div class="pillar-weight">40%</div>
                     </div>
                     <div class="pillar-formula">
-                        daily_balance = Σ(ingresos - egresos) + balance_inicial | can_pay[d] = 1 if daily_balance[d] ≥ parcel | CFA = (pct_90 × 0.70) + (pct_6m × 0.30)
+                        daily_balance = Σ(income - expenses) + initial_balance | can_pay[d] = 1 if daily_balance[d] ≥ parcel | CFA = (pct_90 × 0.70) + (pct_6m × 0.30)
                     </div>
                     <ul class="adjustments-list">
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 70-100% (can pay 70+ days per 100)
-                                    <span class="tooltip-content">Excellent payment capacity: User has sufficient cumulative balance (including balance_inicial) to cover parcel 70+ days out of every 100 days. Consistent balance above parcel threshold. Low default (~5%). Tier 3 ($200) eligible.</span>
+                                    <span class="tooltip-content">Excellent payment capacity: User has sufficient cumulative balance (including initial_balance) to cover parcel 70+ days out of every 100 days. Consistent balance above parcel threshold. Low default (~5%). Tier 3 ($200) eligible.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value positive">70-100</span>
@@ -2916,7 +2916,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 60-69% (can pay 60-69 days per 100)
-                                    <span class="tooltip-content">Good payment capacity: User has sufficient cumulative balance (including balance_inicial) 60-69 days out of every 100 days. Balance usually above parcel with some variability. Moderate default (~9%). Tier 2 ($150) eligible.</span>
+                                    <span class="tooltip-content">Good payment capacity: User has sufficient cumulative balance (including initial_balance) 60-69 days out of every 100 days. Balance usually above parcel with some variability. Moderate default (~9%). Tier 2 ($150) eligible.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value positive">60-69</span>
@@ -2924,7 +2924,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA 50-59% (can pay 50-59 days per 100)
-                                    <span class="tooltip-content">Marginal payment capacity: User has sufficient cumulative balance (including balance_inicial) 50-59 days out of every 100 days. Balance frequently below parcel threshold. Higher default (~14%). Tier 1 ($100) only.</span>
+                                    <span class="tooltip-content">Marginal payment capacity: User has sufficient cumulative balance (including initial_balance) 50-59 days out of every 100 days. Balance frequently below parcel threshold. Higher default (~14%). Tier 1 ($100) only.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value neutral">50-59</span>
@@ -2932,7 +2932,7 @@
                         <li class="adjustment-item">
                             <span>
                                 <span class="tooltip-trigger">CFA &lt; 50% (can pay &lt;50 days per 100)
-                                    <span class="tooltip-content">Insufficient payment capacity: User has sufficient cumulative balance (including balance_inicial) less than 50 days out of every 100 days. Balance consistently below parcel threshold. High default (>20%). Denied.</span>
+                                    <span class="tooltip-content">Insufficient payment capacity: User has sufficient cumulative balance (including initial_balance) less than 50 days out of every 100 days. Balance consistently below parcel threshold. High default (>20%). Denied.</span>
                                 </span>
                             </span>
                             <span class="adjustment-value negative">0-49</span>
@@ -3475,12 +3475,12 @@
                     <div>
                         <h4 style="margin: 0 0 8px 0; color: #155724; font-size: 1rem; font-weight: 600;">✅ NEW CFA MODEL WITH CUMULATIVE BALANCE</h4>
                         <p style="margin: 0 0 8px 0; color: #155724; font-size: 0.9rem; line-height: 1.5;">
-                            Updated with <strong>Cash Flow Affordability (CFA)</strong> methodology using cumulative daily balance analysis (includes balance_inicial).
+                            Updated with <strong>Cash Flow Affordability (CFA)</strong> methodology using cumulative daily balance analysis (includes initial_balance).
                             New thresholds: <strong>Tier 3 ≥70%</strong>, <strong>Tier 2 60-69%</strong>, <strong>Tier 1 50-59%</strong>.
                             Results show <strong>+76% more eligible users</strong> and <strong>+79% loan capacity increase</strong> vs. previous model.
                         </p>
                         <p style="margin: 0; color: #155724; font-size: 0.85rem; font-style: italic;">
-                            📊 CFA measures % of days user has sufficient cumulative balance (daily_balance = Σ(ingresos - egresos) + balance_inicial) to cover biweekly loan payments (pct_90 × 0.70 + pct_6m × 0.30)
+                            📊 CFA measures % of days user has sufficient cumulative balance (daily_balance = Σ(income - expenses) + initial_balance) to cover biweekly loan payments (pct_90 × 0.70 + pct_6m × 0.30)
                         </p>
                     </div>
                 </div>
